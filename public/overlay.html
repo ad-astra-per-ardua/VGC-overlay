@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ── 토큰 ───────────────────────────────────────────── */
+:root {
+  /* Black & Gold Pitch Deck 팔레트 — 덱 theme1 clrScheme(dk1/lt1/dk2) 실측값 그대로 사용 */
+  --bg-0: #000000;
+  --bg-1: #0A0806;
+  --gold: #E9C78C;
+  --gold-dim: #C9A468;
+  --cream: #FAECD3;
+  --card: #14100C;
+  --card-edge: #E9C78C;
+  --brush: #000000;
+  --brush-edge: #E9C78C;
+  --ink: #FAECD3;
+  --blue: #2E6BE0;
+  --red: #D93A2B;
+  --bar-left-dark: #1B47B4;
+  --bar-left-lit: #46A8F0;
+  --bar-right-lit: #F0553C;
+  --bar-right-dark: #B02218;
+  --pill: #3A322A;
+
+  --diff-nov: #5A55C8;
+  --diff-adv: #D8A33C;
+  --diff-exh: #D93A2B;
+  --diff-mxm: #8C8C8C;
+  --diff-inf: #B44FC0;
+  --diff-grv: #D4622A;
+  --diff-hvn: #3F8FD4;
+  --diff-vvd: #D9407A;
+  --diff-xcd: #3A9E8C;
+
+  /* 덱에서 실제 쓰인 서체. 영문 장식 문구(ARENA BATTLE 등)엔 --font-display,
+     한국어·일본어 곡명/선수명엔 CJK 대응되는 --font-body 를 씁니다.
+     Josefin Sans/Cardo/Amatic SC 는 Google Fonts, 넥슨Lv2고딕은 로컬 설치본을 그대로 참조합니다
+     (재배포 라이선스 문제로 웹폰트로 번들하지 않음 — 없으면 Pretendard 로 대체됨). */
+  --font-display: "Josefin Sans", "Pretendard", sans-serif;
+  --font-accent: "Amatic SC", "Josefin Sans", sans-serif;
+  --font-body: "NEXON Lv2 Gothic", "Pretendard", "Noto Sans KR",
+               "Malgun Gothic", "Hiragino Sans", "Yu Gothic UI", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+#stage {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 1920px; height: 1080px;
+  transform-origin: center center;
+  background:
+    radial-gradient(ellipse 1400px 900px at 50% -10%, rgba(233, 199, 140, 0.10), transparent 60%),
+    linear-gradient(160deg, var(--bg-1) 0%, var(--bg-0) 100%);
+  overflow: hidden;
+}
+
+/* 배경 장식 슬롯 — assets/bg.png 넣으면 그대로 깔림 */
+.bg-deco {
+  position: absolute; inset: 0;
+  background: url("/assets/bg.png") center / cover no-repeat;
+  pointer-events: none;
+}
+
+.view { position: absolute; inset: 0; display: none; }
+.view.active { display: block; }
+
+/* ── 상단 팀 바 (선곡/밴) ─────────────────────────────── */
+.topbar {
+  position: absolute; top: 40px; left: 0; right: 0;
+  height: 150px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 56px;
+}
+.side { display: flex; align-items: center; gap: 22px; }
+
+.team-brush {
+  background: var(--brush);
+  padding: 12px 40px;
+  clip-path: polygon(4% 0%, 96% 0%, 100% 100%, 0% 100%);
+  box-shadow: inset 0 0 0 2px var(--brush-edge);
+  display: flex; align-items: center;
+}
+.team-name {
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 34px; font-weight: 700; letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.team-logo {
+  width: 162px; height: 162px;
+  border: 3px solid var(--gold); border-radius: 4px;
+  background: #0A0806 center / cover no-repeat;
+  flex: none;
+}
+.team-logo.sm { width: 68px; height: 68px; border-width: 2px; }
+
+.team-score {
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-size: 62px; font-weight: 700; line-height: 1;
+  min-width: 72px; text-align: center;
+}
+
+/* ── 선곡 카드 ───────────────────────────────────────── */
+.picks {
+  position: absolute; top: 320px; left: 0; right: 0; bottom: 60px;
+  display: grid; grid-template-columns: 1fr 340px 1fr;
+  gap: 0 24px; padding: 0 60px;
+  align-items: start;
+}
+.pick-col { list-style: none; display: flex; flex-direction: column; gap: 26px; }
+
+.pick {
+  position: relative;
+  display: flex; align-items: flex-start; gap: 26px;
+  height: 200px; padding: 16px;
+  background: var(--card);
+  border: 2px solid var(--card-edge);
+  border-radius: 8px;
+  overflow: hidden;
+  animation: pick-in .45s cubic-bezier(.2, .8, .3, 1) both;
+}
+.pick::after {   /* 카드 우측 대각선 골드 셰인 */
+  content: "";
+  position: absolute; right: -30%; top: -60%;
+  width: 70%; height: 220%;
+  background: linear-gradient(100deg, transparent 42%, rgba(233, 199, 140, .10) 50%, transparent 58%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+@keyframes pick-in {
+  from { opacity: 0; transform: translateY(18px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.pick .jacket {
+  width: 160px; height: 160px; flex: none;
+  border: 2px solid var(--gold-dim); border-radius: 4px;
+  background: #1A1512 center / cover no-repeat;
+}
+.pick .meta { flex: 1; min-width: 0; position: relative; z-index: 1; padding-top: 4px; }
+.pick .song-title {
+  color: var(--cream);
+  font-size: 40px; font-weight: 700; line-height: 1.18;
+  letter-spacing: -0.01em;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pick .badge {
+  position: absolute; left: 202px; bottom: 26px;
+  display: inline-flex; align-items: center;
+  height: 40px; padding: 0 18px;
+  border-radius: 4px;
+  background: var(--pill);
+  border: 1px solid rgba(233, 199, 140, .35);
+  color: var(--gold); font-size: 25px; font-weight: 700; letter-spacing: .02em;
+  z-index: 2;
+}
+
+/* ── 밴 연출: 칼로 가로로 긋는 모던한 컷 라인 ──────────── */
+.pick.banned .jacket,
+.pick.banned .meta { filter: grayscale(.6) brightness(.72); }
+
+.ban-mark {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  pointer-events: none; z-index: 5;
+  overflow: hidden;
+}
+
+/* 칼선: 왼쪽에서 오른쪽으로 순간적으로 그어짐. 끝에 흰 광택을 살짝 남겨
+   "베인" 느낌을 냄. transform-origin: left 로 실제 칼질처럼 좌→우 진행 */
+.ban-mark .cut-line {
+  position: absolute; left: 0; right: 0; top: 50%;
+  height: 3px;
+  transform: translateY(-50%) scaleX(0);
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--red) 0%, var(--red) 92%, #fff 100%);
+  box-shadow: 0 0 14px 1px rgba(217, 58, 43, .55);
+  animation: cut-sweep .22s cubic-bezier(.7, 0, .2, 1) forwards;
+}
+@keyframes cut-sweep {
+  to { transform: translateY(-50%) scaleX(1); }
+}
+
+.ban-mark .word {
+  position: relative; z-index: 6;
+  display: inline-flex; align-items: center;
+  padding: 6px 22px;
+  background: #0A0806;
+  border: 2px solid var(--red);
+  color: var(--red);
+  font-family: var(--font-display);
+  font-size: 46px; font-weight: 700; letter-spacing: .12em;
+  opacity: 0; transform: scale(.85);
+  animation: ban-word .22s cubic-bezier(.2, 1.1, .4, 1) .22s forwards;
+}
+@keyframes ban-word {
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ── 중앙 엠블럼 ─────────────────────────────────────── */
+.emblem {
+  position: relative;
+  align-self: center;
+  display: grid; place-items: center;
+  height: 260px;
+}
+.blossom { width: 260px; height: 260px; }
+.emblem-text {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--cream); text-align: center;
+  font-family: var(--font-display);
+}
+.emblem-text .kicker { font-size: 22px; font-weight: 600; letter-spacing: .22em; color: var(--gold-dim); }
+.emblem-text .title  { font-size: 54px; font-weight: 700; letter-spacing: .01em; line-height: 1.05; color: var(--gold); }
+.emblem-text .sub    { font-size: 22px; font-weight: 600; letter-spacing: .26em; color: var(--gold-dim); }
+
+/* ── 경기중 바 ───────────────────────────────────────── */
+.matchbar {
+  position: absolute; top: 40px; left: 0; right: 0;
+  height: 76px;
+  display: flex; align-items: center; justify-content: center; gap: 18px;
+  padding: 0 48px;
+}
+.pill-score {
+  min-width: 96px; height: 62px;
+  display: grid; place-items: center;
+  background: var(--brush);
+  box-shadow: inset 0 0 0 2px var(--brush-edge);
+  color: var(--gold); font-family: var(--font-display); font-size: 42px; font-weight: 700;
+  clip-path: polygon(4% 12%, 96% 4%, 100% 88%, 2% 96%);
+  padding: 0 14px;
+}
+.meter {
+  position: relative;
+  flex: 1; max-width: 1140px; height: 46px;
+  background: rgba(233, 199, 140, .08);
+  border: 1px solid rgba(233, 199, 140, .25);
+  border-radius: 4px;
+  overflow: visible;
+}
+.meter-fill-left, .meter-fill-right {
+  position: absolute; top: 0; bottom: 0;
+  transition: width .35s cubic-bezier(.3, .8, .3, 1), left .35s cubic-bezier(.3, .8, .3, 1);
+}
+.meter-fill-left  { left: 0;  background: linear-gradient(90deg, var(--bar-left-dark), var(--bar-left-lit)); border-radius: 4px 0 0 4px; }
+.meter-fill-right { right: 0; background: linear-gradient(90deg, var(--bar-right-lit), var(--bar-right-dark)); border-radius: 0 4px 4px 0; }
+
+.meter-knob {
+  position: absolute; top: -30px; bottom: -8px;
+  width: 0;
+  display: flex; justify-content: center;
+  transition: left .35s cubic-bezier(.3, .8, .3, 1);
+  z-index: 3;
+}
+.meter-knob::before {
+  content: ""; position: absolute; top: 34px; bottom: 0;
+  width: 3px; background: var(--gold);
+}
+.meter-knob span {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 118px; height: 44px; padding: 0 16px;
+  background: var(--brush); color: var(--gold);
+  box-shadow: inset 0 0 0 2px var(--brush-edge);
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 700; white-space: nowrap;
+  clip-path: polygon(6% 8%, 94% 2%, 100% 78%, 50% 100%, 0 76%);
+}
+.meter-knob span:empty { display: none; }
+
+/* 앞선 팀 색으로 점수차 라벨을 칠함 (결과 화면 규칙과 동일) */
+.meter-knob span { transition: background-color .3s ease, color .3s ease; }
+.meter-knob.lead-left  span { background: var(--bar-left-dark); color: #fff; box-shadow: none; }
+.meter-knob.lead-right span { background: var(--bar-right-dark); color: #fff; box-shadow: none; }
+
+/* ── 4분할 피드 ──────────────────────────────────────── */
+.feeds {
+  position: absolute; top: 140px; left: 28px; right: 28px; bottom: 40px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+}
+.feed { position: relative; display: flex; flex-direction: column; }
+.feed .rank {
+  height: 56px; margin: 0 6px;
+  display: grid; place-items: center;
+  background: var(--brush);
+  box-shadow: inset 0 0 0 2px var(--brush-edge);
+  color: var(--gold); font-family: var(--font-display);
+  font-size: 40px; font-weight: 700; letter-spacing: .02em;
+  clip-path: polygon(3% 10%, 97% 2%, 100% 92%, 1% 100%);
+}
+.feed .frame {
+  position: relative; flex: 1;
+  border: 3px solid var(--card-edge);
+  border-radius: 4px;
+  background: #000;
+  overflow: hidden;
+}
+.feed video, .feed .placeholder {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.feed .placeholder {
+  display: grid; place-items: center;
+  color: rgba(233, 199, 140, .3);
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 600; letter-spacing: .1em;
+  background: repeating-linear-gradient(45deg, #0A0806 0 14px, #120E09 14px 28px);
+}
+.feed .plate {
+  position: absolute; left: 0; right: 0; bottom: -14px;
+  height: 82px;
+  display: flex; align-items: center; gap: 14px;
+  padding-left: 8px;
+  z-index: 2;
+}
+.feed .plate .avatar {
+  width: 66px; height: 66px; flex: none;
+  border-radius: 50%; border: 2px solid var(--gold);
+  background: #1A1512 center / cover no-repeat;
+}
+.feed .plate .brush {
+  flex: 1; min-width: 0; height: 58px;
+  display: flex; align-items: center;
+  padding: 0 18px;
+  background: var(--brush);
+  box-shadow: inset 0 0 0 1px rgba(233, 199, 140, .3);
+  clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%);
+}
+.feed .plate .brush span {
+  color: var(--cream); font-size: 30px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.feed[data-team="left"]  .plate .brush { box-shadow: inset 0 0 0 1px var(--bar-left-lit); }
+.feed[data-team="right"] .plate .brush { box-shadow: inset 0 0 0 1px var(--bar-right-lit); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <div class="bg-deco" aria-hidden="true"></div>
+
+  <!-- 선곡 / 밴 공용 뷰 -->
+  <section class="view" data-view="songs">
+    <header class="topbar">
+      <div class="side left">
+        <div class="team-brush"><span class="team-name" data-bind="teams.left.name"></span></div>
+        <div class="team-logo" data-bind-bg="teams.left.logo"></div>
+        <div class="team-score" data-bind="teams.left.score"></div>
+      </div>
+      <div class="side right">
+        <div class="team-score" data-bind="teams.right.score"></div>
+        <div class="team-logo" data-bind-bg="teams.right.logo"></div>
+        <div class="team-brush"><span class="team-name" data-bind="teams.right.name"></span></div>
+      </div>
+    </header>
+
+    <div class="picks">
+      <ul class="pick-col" id="picks-left"></ul>
+
+      <div class="emblem">
+        <svg viewBox="0 0 220 220" class="blossom" aria-hidden="true">
+          <g fill="none" stroke="#E9C78C">
+            <rect x="30" y="30" width="160" height="160" transform="rotate(45 110 110)" stroke-width="2.5"/>
+            <rect x="52" y="52" width="116" height="116" transform="rotate(45 110 110)" stroke-width="1.5" opacity=".55"/>
+          </g>
+          <g fill="#E9C78C">
+            <rect x="106" y="6" width="8" height="8" transform="rotate(45 110 10)"/>
+            <rect x="106" y="206" width="8" height="8" transform="rotate(45 110 210)"/>
+            <rect x="6" y="106" width="8" height="8" transform="rotate(45 10 110)"/>
+            <rect x="206" y="106" width="8" height="8" transform="rotate(45 210 110)"/>
+          </g>
+        </svg>
+        <div class="emblem-text">
+          <span class="kicker" data-bind="round.kicker"></span>
+          <span class="title" data-bind="round.title"></span>
+          <span class="sub" data-bind="round.sub"></span>
+        </div>
+      </div>
+
+      <ul class="pick-col" id="picks-right"></ul>
+    </div>
+  </section>
+
+  <!-- 경기중 뷰 -->
+  <section class="view" data-view="match">
+    <header class="matchbar">
+      <div class="team-logo sm" data-bind-bg="teams.left.logo"></div>
+      <div class="pill-score left" data-bind="teams.left.score"></div>
+      <div class="meter" id="meter">
+        <div class="meter-fill-left" id="meter-left"></div>
+        <div class="meter-fill-right" id="meter-right"></div>
+        <div class="meter-knob" id="meter-knob"><span id="meter-label"></span></div>
+      </div>
+      <div class="pill-score right" data-bind="teams.right.score"></div>
+      <div class="team-logo sm" data-bind-bg="teams.right.logo"></div>
+    </header>
+
+    <div class="feeds" id="feeds"></div>
+  </section>
+
+</div>
+<script>
+'use strict';
+
+const stage = document.getElementById('stage');
+let state = null;
+
+/* ── 1920x1080 스테이지를 창 크기에 맞춰 스케일 ── */
+function fit() {
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  stage.style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+addEventListener('resize', fit);
+fit();
+
+/* ── 유틸 ── */
+/* 선곡과 밴은 같은 화면입니다. 예전 상태값은 songs 로 흡수합니다. */
+const normView = (v) => (v === 'select' || v === 'ban') ? 'songs' : (v || 'songs');
+
+const get = (obj, dotPath) => dotPath.split('.').reduce((a, k) => (a == null ? a : a[k]), obj);
+
+const DIFF_VAR = {
+  NOV: '--diff-nov', ADV: '--diff-adv', EXH: '--diff-exh', MXM: '--diff-mxm',
+  INF: '--diff-inf', GRV: '--diff-grv', HVN: '--diff-hvn', VVD: '--diff-vvd', XCD: '--diff-xcd'
+};
+
+function applyBindings() {
+  document.querySelectorAll('[data-bind]').forEach((el) => {
+    const v = get(state, el.dataset.bind);
+    el.textContent = v == null ? '' : String(v);
+  });
+  document.querySelectorAll('[data-bind-bg]').forEach((el) => {
+    const v = get(state, el.dataset.bindBg);
+    el.style.backgroundImage = v ? `url("${v}")` : '';
+  });
+}
+
+/* ── 선곡 / 밴 ──
+   innerHTML 을 갈아엎지 않고 기존 DOM 을 제자리에서 갱신합니다.
+   이렇게 해야 점수 하나 바꿨다고 카드가 다시 튀어나오지 않습니다. */
+const pickCache = { left: '', right: '' };
+
+function makePick() {
+  const li = document.createElement('li');
+  li.className = 'pick';
+  li.innerHTML = '<div class="jacket"></div>'
+               + '<div class="meta"><div class="song-title"></div></div>'
+               + '<div class="badge"></div>';
+  return li;
+}
+
+function updatePick(li, song, i, animate) {
+  const jacket = li.querySelector('.jacket');
+  const bg = song.jacket ? `url("${song.jacket}")` : '';
+  if (jacket.style.backgroundImage !== bg) jacket.style.backgroundImage = bg;
+
+  const title = li.querySelector('.song-title');
+  const titleText = song.title || '';
+  if (title.textContent !== titleText) title.textContent = titleText;
+
+  const badge = li.querySelector('.badge');
+  const badgeText = `${song.diff || ''} ${song.level || ''}`.trim();
+  if (badge.textContent !== badgeText) badge.textContent = badgeText;
+  const varName = DIFF_VAR[(song.diff || '').toUpperCase()];
+  badge.style.background = varName ? `var(${varName})` : '';
+  // 난이도색 배경은 검정 텍스트, 배지 기본색(--pill, 어두움)은 골드 텍스트 — 어느 쪽이든 대비 확보
+  badge.style.color = varName ? '#000' : 'var(--gold)';
+
+  li.classList.toggle('banned', !!song.banned);
+
+  // 새로 붙을 때 한 번만 연출이 재생됩니다. 카드는 그대로 있습니다.
+  const wantMark = !!song.banned;
+  const mark = li.querySelector('.ban-mark');
+  if (wantMark && !mark) {
+    const el = document.createElement('div');
+    el.className = 'ban-mark';
+    el.innerHTML = '<div class="cut-line"></div><div class="word">BANNED</div>';
+    li.appendChild(el);
+  } else if (!wantMark && mark) {
+    mark.remove();
+  }
+
+  if (animate) {
+    li.style.animation = 'none';
+    void li.offsetWidth;          // 리플로우를 강제해 애니메이션을 다시 태움
+    li.style.animation = '';
+    li.style.animationDelay = `${i * 0.09}s`;
+  }
+}
+
+function renderPicks(animate) {
+  ['left', 'right'].forEach((side) => {
+    const ul = document.getElementById(`picks-${side}`);
+    const songs = (state.songs && state.songs[side]) || [];
+    const sig = JSON.stringify(songs);
+    if (!animate && pickCache[side] === sig) return;   // 바뀐 게 없으면 손대지 않음
+    pickCache[side] = sig;
+
+    while (ul.children.length > songs.length) ul.lastElementChild.remove();
+    while (ul.children.length < songs.length) ul.appendChild(makePick());
+
+    songs.forEach((song, i) => updatePick(ul.children[i], song, i, animate));
+  });
+}
+
+/* ── 경기중 피드 ── */
+const videoEls = new Map();     // slotIndex -> <video>
+const timelines = new Map();    // slotIndex -> { t, s } 사전 추출된 점수 타임라인
+const timelineSrc = new Map();
+
+async function loadTimeline(i, url) {
+  if (timelineSrc.get(i) === url) return;
+  timelineSrc.set(i, url);
+  timelines.delete(i);
+  if (!url) return;
+  try {
+    const res = await fetch(url);
+    const pts = (await res.json()).points || [];
+    timelines.set(i, {
+      t: Float64Array.from(pts, (p) => p[0]),
+      s: Float64Array.from(pts, (p) => p[1])
+    });
+  } catch (e) {
+    console.warn('타임라인 로드 실패:', url, e);
+  }
+}
+
+/** time 이하인 마지막 샘플의 점수 (이분 탐색 — 프레임당 수십 ns) */
+function scoreAt(i, time) {
+  const tl = timelines.get(i);
+  if (!tl || !tl.t.length) return null;
+  if (time <= tl.t[0]) return tl.s[0];
+  let lo = 0, hi = tl.t.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (tl.t[mid] <= time) lo = mid; else hi = mid - 1;
+  }
+  return tl.s[lo];
+}
+
+function renderFeeds() {
+  const wrap = document.getElementById('feeds');
+  const slots = (state.match && state.match.slots) || [];
+
+  // 슬롯 수가 바뀌었을 때만 전체 재구성
+  if (wrap.children.length !== slots.length) {
+    wrap.innerHTML = '';
+    videoEls.clear();
+    slots.forEach(() => {
+      const feed = document.createElement('div');
+      feed.className = 'feed';
+      feed.innerHTML =
+        '<div class="rank"></div>' +
+        '<div class="frame"><div class="placeholder">NO SIGNAL</div>' +
+        '<div class="plate"><div class="avatar"></div><div class="brush"><span></span></div></div></div>';
+      wrap.appendChild(feed);
+    });
+  }
+
+  slots.forEach((slot, i) => {
+    const feed = wrap.children[i];
+    loadTimeline(i, slot.timeline || '');
+    feed.dataset.team = slot.team || '';
+    feed.querySelector('.rank').textContent = slot.rank || '';
+    feed.querySelector('.plate .brush span').textContent = slot.player || '';
+    feed.querySelector('.plate .avatar').style.backgroundImage = slot.icon ? `url("${slot.icon}")` : '';
+
+    const frame = feed.querySelector('.frame');
+    const placeholder = frame.querySelector('.placeholder');
+    let video = videoEls.get(i);
+
+    if (slot.video) {
+      if (!video) {
+        video = document.createElement('video');
+        video.muted = true;               // 음성은 OBS에서 별도 소스로 믹싱
+        video.playsInline = true;
+        video.preload = 'auto';
+        frame.insertBefore(video, placeholder.nextSibling);
+        videoEls.set(i, video);
+      }
+      if (video.dataset.src !== slot.video) {
+        video.dataset.src = slot.video;
+        video.src = slot.video;
+        video.load();
+      }
+      placeholder.style.display = 'none';
+    } else {
+      if (video) { video.remove(); videoEls.delete(i); }
+      placeholder.style.display = '';
+    }
+  });
+}
+
+/* ── 미터 ── */
+/** 점수차를 4k / 96.1k / 1.24M 형태로 축약 */
+function formatDiff(n) {
+  const a = Math.abs(Math.round(n));
+  if (a < 1000) return String(a);
+  if (a < 999500) {              // 반올림했을 때 1000k 가 되는 구간은 M 으로 넘김
+    const v = a / 1000;
+    return trimZeros(v < 100 ? v.toFixed(1) : v.toFixed(0)) + 'k';
+  }
+  const v = a / 1e6;
+  return trimZeros(v < 10 ? v.toFixed(2) : v.toFixed(1)) + 'M';
+}
+
+function trimZeros(str) {
+  return str.indexOf('.') < 0 ? str : str.replace(/0+$/, '').replace(/\.$/, '');
+}
+
+// ratio: -1 = 좌팀 압도, +1 = 우팀 압도 / lead: 'left' | 'right' | ''
+function setMeter(ratio, label, lead) {
+  const leftPct = 50 - Math.max(-1, Math.min(1, ratio)) * 50;
+  document.getElementById('meter-left').style.width = `${leftPct}%`;
+  document.getElementById('meter-right').style.width = `${100 - leftPct}%`;
+  const knob = document.getElementById('meter-knob');
+  knob.style.left = `${leftPct}%`;
+  knob.classList.toggle('lead-left', lead === 'left');
+  knob.classList.toggle('lead-right', lead === 'right');
+  document.getElementById('meter-label').textContent = label;
+}
+
+function renderMeter() {
+  const m = state.match || {};
+  document.getElementById('meter').parentElement.style.visibility =
+    m.meterVisible === false ? 'hidden' : 'visible';
+  if (!m.autoMeter) setMeter(Number(m.meter) || 0, m.label || '', '');
+}
+
+/* 자동 미터: 재생 위치로 타임라인을 조회해 팀 합산 점수차를 그림.
+   OCR 을 돌리는 게 아니라 배열을 찾는 것뿐이라 딜레이가 없습니다. */
+let lastMeterAt = 0;
+
+function autoTick(now) {
+  requestAnimationFrame(autoTick);
+  if (!state || state.view !== 'match' || !state.match.autoMeter) return;
+  if (now - lastMeterAt < 100) return;   // 초당 10회면 충분 (CSS 트랜지션이 보간)
+  lastMeterAt = now;
+
+  const slots = state.match.slots || [];
+  const master = videoEls.get(0);
+  if (!master || !slots.length) return;
+
+  // 기준 시계 = 0번 슬롯 영상 시각에서 그 슬롯의 싱크 보정을 뺀 값
+  const base = master.currentTime - (Number(slots[0].offsetMs) || 0) / 1000;
+
+  let left = 0, right = 0, found = false;
+  slots.forEach((slot, i) => {
+    const v = scoreAt(i, base + (Number(slot.offsetMs) || 0) / 1000);
+    if (v == null) return;
+    found = true;
+    if (slot.team === 'right') right += v; else left += v;
+  });
+  if (!found) return;
+
+  const diff = right - left;
+  const max = Number(state.match.maxDiff) || 150000;
+  const lead = diff > 0 ? 'right' : diff < 0 ? 'left' : '';
+  // labelStyle: 'short' = 4k / 96.1k / 1.24M, 'full' = 96,074
+  const label = state.match.labelStyle === 'full'
+    ? Math.abs(diff).toLocaleString('en-US')
+    : formatDiff(diff);
+  setMeter(diff / max, label, lead);
+}
+requestAnimationFrame(autoTick);
+
+/* ── 뷰 전환 ── */
+let prevView = null;
+
+function render() {
+  state.view = normView(state.view);
+  const viewChanged = prevView !== state.view;
+  prevView = state.view;
+
+  document.querySelectorAll('.view').forEach((v) => {
+    v.classList.toggle('active', v.dataset.view.split(' ').includes(state.view));
+  });
+  applyBindings();
+  if (state.view === 'songs') renderPicks(viewChanged);
+  if (state.view === 'match') { renderFeeds(); renderMeter(); }
+}
+
+/* ── 영상 제어 ── */
+function seekAll(t) {
+  const slots = (state.match && state.match.slots) || [];
+  videoEls.forEach((video, i) => {
+    const offset = (slots[i] && Number(slots[i].offsetMs)) || 0;
+    video.currentTime = Math.max(0, t + offset / 1000);
+  });
+}
+
+function handleCmd(cmd) {
+  switch (cmd.type) {
+    case 'play':
+      videoEls.forEach((v) => v.play().catch(() => {}));
+      break;
+    case 'pause':
+      videoEls.forEach((v) => v.pause());
+      break;
+    case 'seek':
+      seekAll(Number(cmd.t) || 0);
+      break;
+    case 'restart':
+      seekAll(0);
+      videoEls.forEach((v) => v.play().catch(() => {}));
+      break;
+    case 'replayBan':
+      document.querySelectorAll('.ban-mark').forEach((el) => el.remove());
+      pickCache.left = pickCache.right = '';
+      renderPicks(false);
+      break;
+    case 'reload':
+      location.reload();
+      break;
+  }
+}
+
+/* ── SSE ── */
+function connect() {
+  const es = new EventSource('/api/events');
+  es.addEventListener('state', (e) => { state = JSON.parse(e.data); render(); });
+  es.addEventListener('cmd', (e) => handleCmd(JSON.parse(e.data)));
+  es.onerror = () => { es.close(); setTimeout(connect, 1500); };
+}
+connect();
+
+</script>
+</body>
+</html>

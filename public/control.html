@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>대회 송출 컨트롤</title>
+<style>
+  :root { --line: #2E2A26; --accent: #E9C78C; --panel: #1C1917; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 20px 20px 80px;
+    background: #121010; color: #EDE6DE;
+    font: 15px/1.5 "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+  }
+  h1 { font-size: 19px; margin: 0 0 16px; letter-spacing: -.02em; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .14em;
+       color: #A79B8E; margin: 0 0 10px; }
+  section { background: var(--panel); border: 1px solid var(--line);
+            border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  button {
+    background: #292420; color: #EDE6DE; border: 1px solid var(--line);
+    border-radius: 7px; padding: 9px 15px; font: inherit; font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.on { background: var(--accent); border-color: var(--accent); color: #1A1210; }
+  button.ban { background: #6E2018; border-color: #8E2A20; }
+  button.ban.on { background: #D93A2B; border-color: #D93A2B; color: #fff; }
+  button.ban.pending { background: #7A4A12; border-color: var(--accent); border-style: dashed; }
+  input, select, textarea {
+    background: #0E0C0B; color: #EDE6DE; border: 1px solid var(--line);
+    border-radius: 6px; padding: 8px 10px; font: inherit; width: 100%;
+  }
+  input[type=range] { padding: 0; }
+  label { display: block; font-size: 12px; color: #A79B8E; margin: 0 0 4px; }
+  .field { margin-bottom: 10px; }
+  .song { border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+  .song .head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .song .head input { flex: 1; }
+  .mini { display: grid; grid-template-columns: 90px 90px 1fr; gap: 6px; }
+  textarea { min-height: 220px; font-family: ui-monospace, "SFMono-Regular", monospace; font-size: 12px; }
+  .status { position: fixed; right: 16px; bottom: 16px; background: #0E0C0B;
+            border: 1px solid var(--line); border-radius: 20px; padding: 7px 14px; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>대회 송출 컨트롤</h1>
+
+<section>
+  <h2>화면</h2>
+  <div class="row">
+    <button data-view="songs">선곡 화면</button>
+    <button data-view="match">경기 중</button>
+    <span style="flex:1"></span>
+    <button id="replay-ban">밴 애니 다시</button>
+    <button id="reload">오버레이 새로고침</button>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <button id="ban-apply">밴 일괄 적용</button>
+    <button id="ban-reset">선택 취소</button>
+    <span id="ban-pending" style="color:#A79B8E; font-size:12px"></span>
+  </div>
+</section>
+
+<section>
+  <h2>라운드</h2>
+  <div class="row">
+    <input id="round-kicker" placeholder="ARENA BATTLE" style="flex:1">
+    <input id="round-title" placeholder="ROUND 1" style="flex:1">
+    <input id="round-sub" placeholder="EVOLVE" style="flex:1">
+  </div>
+</section>
+
+<div class="grid2">
+  <section>
+    <h2>왼쪽 팀</h2>
+    <div class="field"><label>팀명</label><input id="left-name"></div>
+    <div class="field"><label>로고 경로</label><input id="left-logo" placeholder="/assets/team-left.png"></div>
+    <div class="field"><label>세트 스코어</label>
+      <div class="row"><button data-score="left" data-delta="-1">−</button>
+        <input id="left-score" type="number" style="width:80px">
+        <button data-score="left" data-delta="1">+</button></div>
+    </div>
+    <h2 style="margin-top:16px">선곡</h2>
+    <div id="songs-left"></div>
+    <button data-add="left">곡 추가</button>
+  </section>
+
+  <section>
+    <h2>오른쪽 팀</h2>
+    <div class="field"><label>팀명</label><input id="right-name"></div>
+    <div class="field"><label>로고 경로</label><input id="right-logo" placeholder="/assets/team-right.png"></div>
+    <div class="field"><label>세트 스코어</label>
+      <div class="row"><button data-score="right" data-delta="-1">−</button>
+        <input id="right-score" type="number" style="width:80px">
+        <button data-score="right" data-delta="1">+</button></div>
+    </div>
+    <h2 style="margin-top:16px">선곡</h2>
+    <div id="songs-right"></div>
+    <button data-add="right">곡 추가</button>
+  </section>
+</div>
+
+<section>
+  <h2>경기 중 — 영상</h2>
+  <div id="slots"></div>
+  <div class="row" style="margin-top:12px">
+    <button id="play">재생</button>
+    <button id="pause">일시정지</button>
+    <button id="restart">처음부터</button>
+    <label style="margin:0 0 0 12px">seek(초)</label>
+    <input id="seek-t" type="number" value="0" step="0.1" style="width:90px">
+    <button id="seek">이동</button>
+  </div>
+</section>
+
+<section>
+  <h2>점수 미터 (OCR 붙이기 전 수동)</h2>
+  <div class="field">
+    <label>좌 ← <span id="meter-val">0.00</span> → 우</label>
+    <input id="meter" type="range" min="-1" max="1" step="0.01" value="0">
+  </div>
+  <div class="row">
+    <input id="meter-label" placeholder="중앙 표시 텍스트 (예: +96,074)" style="flex:1">
+    <button id="meter-toggle">미터 표시/숨김</button>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <button id="auto-toggle">자동 미터</button>
+    <label style="margin:0 0 0 12px">최대 점수차</label>
+    <input id="max-diff" type="number" step="10000" style="width:130px">
+    <span style="color:#A79B8E;font-size:12px">이 차이에서 바가 끝까지 참</span>
+    <button id="label-style" style="margin-left:12px">표기: 축약</button>
+  </div>
+</section>
+
+<section>
+  <h2>원본 상태 (JSON)</h2>
+  <textarea id="raw"></textarea>
+  <div class="row" style="margin-top:8px">
+    <button id="raw-load">현재 상태 불러오기</button>
+    <button id="raw-apply">적용</button>
+  </div>
+</section>
+
+<div class="status" id="status">연결 중…</div>
+<script>
+'use strict';
+
+let state = null;
+let editing = false;   // 입력 중 재렌더로 커서 튀는 것 방지
+
+/* 밴은 누를 때마다 송출에 나가지 않고, 여기 모았다가 한 번에 반영합니다.
+   index -> 원하는 banned 값 */
+const pendingBans = { left: new Map(), right: new Map() };
+
+const $ = (id) => document.getElementById(id);
+const statusEl = $('status');
+
+async function patch(body) {
+  await fetch('/api/state', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
+async function cmd(body) {
+  await fetch('/api/cmd', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
+
+const DIFFS = ['NOV', 'ADV', 'EXH', 'MXM', 'INF', 'GRV', 'HVN', 'VVD', 'XCD'];
+
+/* ── 곡 목록 ── */
+function renderSongs(side) {
+  const wrap = $(`songs-${side}`);
+  wrap.innerHTML = '';
+  (state.songs[side] || []).forEach((song, i) => {
+    const box = document.createElement('div');
+    box.className = 'song';
+
+    const head = document.createElement('div');
+    head.className = 'head';
+    const title = document.createElement('input');
+    title.value = song.title || '';
+    title.placeholder = '곡명';
+    title.oninput = () => { state.songs[side][i].title = title.value; pushSongs(side); };
+
+    const pend = pendingBans[side];
+    const target = pend.has(i) ? pend.get(i) : !!song.banned;
+    const dirty = pend.has(i) && pend.get(i) !== !!song.banned;
+
+    const banBtn = document.createElement('button');
+    banBtn.className = 'ban' + (dirty ? ' pending' : target ? ' on' : '');
+    banBtn.textContent = dirty ? (target ? '밴 예정' : '해제 예정') : (target ? 'BANNED' : 'BAN');
+    banBtn.onclick = () => {
+      const cur = pend.has(i) ? pend.get(i) : !!song.banned;
+      pend.set(i, !cur);
+      if (pend.get(i) === !!song.banned) pend.delete(i);   // 원래대로 돌아오면 대기열에서 제거
+      renderSongs(side);
+      updateBanPending();
+    };
+
+    const del = document.createElement('button');
+    del.textContent = '×';
+    del.onclick = () => {
+      state.songs[side].splice(i, 1);
+      pendingBans[side].clear();      // 인덱스가 밀리므로 대기열은 버림
+      pushSongs(side); renderSongs(side); updateBanPending();
+    };
+
+    head.append(title, banBtn, del);
+
+    const mini = document.createElement('div');
+    mini.className = 'mini';
+
+    const diff = document.createElement('select');
+    DIFFS.forEach((d) => {
+      const o = document.createElement('option');
+      o.value = d; o.textContent = d;
+      if ((song.diff || '').toUpperCase() === d) o.selected = true;
+      diff.appendChild(o);
+    });
+    diff.onchange = () => { state.songs[side][i].diff = diff.value; pushSongs(side); };
+
+    const level = document.createElement('input');
+    level.value = song.level || '';
+    level.placeholder = '17.5';
+    level.oninput = () => { state.songs[side][i].level = level.value; pushSongs(side); };
+
+    const jacket = document.createElement('input');
+    jacket.value = song.jacket || '';
+    jacket.placeholder = '/assets/jackets/xxx.png';
+    jacket.oninput = () => { state.songs[side][i].jacket = jacket.value; pushSongs(side); };
+
+    mini.append(diff, level, jacket);
+    box.append(head, mini);
+    wrap.appendChild(box);
+  });
+}
+
+const pushSongs = debounce((side) => patch({ songs: { [side]: state.songs[side] } }), 250);
+
+/* ── 경기중 슬롯 ── */
+function renderSlots() {
+  const wrap = $('slots');
+  wrap.innerHTML = '';
+  (state.match.slots || []).forEach((slot, i) => {
+    const box = document.createElement('div');
+    box.className = 'song';
+
+    const head = document.createElement('div');
+    head.className = 'head';
+
+    const rank = document.createElement('input');
+    rank.value = slot.rank || ''; rank.placeholder = '1st';
+    rank.style.maxWidth = '80px';
+    rank.oninput = () => { state.match.slots[i].rank = rank.value; pushSlots(); };
+
+    const team = document.createElement('select');
+    [['left', '왼쪽 팀'], ['right', '오른쪽 팀']].forEach(([v, t]) => {
+      const o = document.createElement('option');
+      o.value = v; o.textContent = t;
+      if (slot.team === v) o.selected = true;
+      team.appendChild(o);
+    });
+    team.style.maxWidth = '120px';
+    team.onchange = () => { state.match.slots[i].team = team.value; pushSlots(); };
+
+    const player = document.createElement('input');
+    player.value = slot.player || ''; player.placeholder = '선수명';
+    player.oninput = () => { state.match.slots[i].player = player.value; pushSlots(); };
+
+    head.append(rank, team, player);
+
+    const mini = document.createElement('div');
+    mini.className = 'mini';
+    mini.style.gridTemplateColumns = '1fr 100px 1fr 1fr';
+
+    const video = document.createElement('input');
+    video.value = slot.video || ''; video.placeholder = '/videos/p1.mp4';
+    video.oninput = () => { state.match.slots[i].video = video.value; pushSlots(); };
+
+    const offset = document.createElement('input');
+    offset.type = 'number'; offset.step = '10';
+    offset.value = slot.offsetMs || 0;
+    offset.title = '싱크 보정 (ms). 양수면 그 선수 영상을 뒤로 당김';
+    offset.oninput = () => { state.match.slots[i].offsetMs = Number(offset.value) || 0; pushSlots(); };
+
+    const icon = document.createElement('input');
+    icon.value = slot.icon || ''; icon.placeholder = '/assets/icon1.png';
+    icon.oninput = () => { state.match.slots[i].icon = icon.value; pushSlots(); };
+
+    const timeline = document.createElement('input');
+    timeline.value = slot.timeline || ''; timeline.placeholder = '/videos/p1.scores.json';
+    timeline.oninput = () => { state.match.slots[i].timeline = timeline.value; pushSlots(); };
+
+    mini.append(video, offset, icon, timeline);
+    box.append(head, mini);
+    wrap.appendChild(box);
+  });
+}
+
+const pushSlots = debounce(() => patch({ match: { slots: state.match.slots } }), 250);
+
+/* ── 전체 렌더 ── */
+function render() {
+  document.querySelectorAll('[data-view]').forEach((b) => {
+    b.classList.toggle('on', b.dataset.view === state.view);
+  });
+  if (editing) return;
+
+  $('round-kicker').value = state.round.kicker || '';
+  $('round-title').value = state.round.title || '';
+  $('round-sub').value = state.round.sub || '';
+
+  ['left', 'right'].forEach((side) => {
+    $(`${side}-name`).value = state.teams[side].name || '';
+    $(`${side}-logo`).value = state.teams[side].logo || '';
+    $(`${side}-score`).value = state.teams[side].score || 0;
+    renderSongs(side);
+  });
+
+  renderSlots();
+  updateBanPending();
+  $('meter').value = state.match.meter || 0;
+  $('meter-val').textContent = Number(state.match.meter || 0).toFixed(2);
+  $('meter-label').value = state.match.label || '';
+  $('max-diff').value = state.match.maxDiff || 150000;
+  $('auto-toggle').classList.toggle('on', !!state.match.autoMeter);
+  $('label-style').textContent = state.match.labelStyle === 'full' ? '표기: 전체' : '표기: 축약';
+  $('meter').disabled = !!state.match.autoMeter;
+}
+
+/* ── 이벤트 배선 ── */
+document.querySelectorAll('[data-view]').forEach((b) => {
+  b.onclick = () => patch({ view: b.dataset.view });
+});
+$('replay-ban').onclick = () => cmd({ type: 'replayBan' });
+
+function updateBanPending() {
+  const n = pendingBans.left.size + pendingBans.right.size;
+  $('ban-pending').textContent = n ? `${n}건 대기 중 — "밴 일괄 적용" 을 누르세요` : '';
+  $('ban-apply').classList.toggle('on', n > 0);
+}
+
+// 양쪽 곡 목록을 한 번의 요청으로 보내 오버레이가 한 번만 갱신되게 함
+$('ban-apply').onclick = () => {
+  const n = pendingBans.left.size + pendingBans.right.size;
+  if (!n) return;
+  ['left', 'right'].forEach((side) => {
+    pendingBans[side].forEach((val, i) => {
+      if (state.songs[side][i]) state.songs[side][i].banned = val;
+    });
+    pendingBans[side].clear();
+  });
+  patch({ songs: { left: state.songs.left, right: state.songs.right } });
+  updateBanPending();
+  ['left', 'right'].forEach(renderSongs);
+};
+
+$('ban-reset').onclick = () => {
+  pendingBans.left.clear();
+  pendingBans.right.clear();
+  updateBanPending();
+  ['left', 'right'].forEach(renderSongs);
+};
+$('reload').onclick = () => cmd({ type: 'reload' });
+
+['kicker', 'title', 'sub'].forEach((k) => {
+  $(`round-${k}`).oninput = debounce(() => patch({ round: { [k]: $(`round-${k}`).value } }), 250);
+});
+
+['left', 'right'].forEach((side) => {
+  $(`${side}-name`).oninput = debounce(() => patch({ teams: { [side]: { name: $(`${side}-name`).value } } }), 250);
+  $(`${side}-logo`).oninput = debounce(() => patch({ teams: { [side]: { logo: $(`${side}-logo`).value } } }), 250);
+  $(`${side}-score`).oninput = debounce(() => patch({ teams: { [side]: { score: Number($(`${side}-score`).value) || 0 } } }), 250);
+});
+
+document.querySelectorAll('[data-score]').forEach((b) => {
+  b.onclick = () => {
+    const side = b.dataset.score;
+    const next = Math.max(0, (state.teams[side].score || 0) + Number(b.dataset.delta));
+    patch({ teams: { [side]: { score: next } } });
+  };
+});
+
+document.querySelectorAll('[data-add]').forEach((b) => {
+  b.onclick = () => {
+    const side = b.dataset.add;
+    state.songs[side].push({ title: '', jacket: '', diff: 'MXM', level: '', banned: false });
+    patch({ songs: { [side]: state.songs[side] } });
+    renderSongs(side);
+  };
+});
+
+$('play').onclick = () => cmd({ type: 'play' });
+$('pause').onclick = () => cmd({ type: 'pause' });
+$('restart').onclick = () => cmd({ type: 'restart' });
+$('seek').onclick = () => cmd({ type: 'seek', t: Number($('seek-t').value) || 0 });
+
+$('meter').oninput = () => {
+  const v = Number($('meter').value);
+  $('meter-val').textContent = v.toFixed(2);
+  pushMeter(v);
+};
+const pushMeter = debounce((v) => patch({ match: { meter: v } }), 80);
+$('meter-label').oninput = debounce(() => patch({ match: { label: $('meter-label').value } }), 250);
+$('meter-toggle').onclick = () => patch({ match: { meterVisible: state.match.meterVisible === false } });
+$('auto-toggle').onclick = () => patch({ match: { autoMeter: !state.match.autoMeter } });
+$('label-style').onclick = () => patch({
+  match: { labelStyle: state.match.labelStyle === 'full' ? 'short' : 'full' }
+});
+$('max-diff').oninput = debounce(() => patch({ match: { maxDiff: Number($('max-diff').value) || 150000 } }), 250);
+
+$('raw-load').onclick = () => { $('raw').value = JSON.stringify(state, null, 2); };
+$('raw-apply').onclick = async () => {
+  try { await patch(JSON.parse($('raw').value)); }
+  catch (e) { alert('JSON 형식 오류: ' + e.message); }
+};
+
+// 입력 중 재렌더 억제
+document.addEventListener('focusin', (e) => { if (e.target.matches('input, textarea, select')) editing = true; });
+document.addEventListener('focusout', () => { setTimeout(() => { editing = false; }, 200); });
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+/* ── SSE ── */
+function connect() {
+  const es = new EventSource('/api/events');
+  es.addEventListener('state', (e) => {
+    state = JSON.parse(e.data);
+    if (state.view === 'select' || state.view === 'ban') state.view = 'songs';
+    statusEl.textContent = '연결됨';
+    render();
+  });
+  es.onerror = () => { statusEl.textContent = '재연결 중…'; es.close(); setTimeout(connect, 1500); };
+}
+connect();
+
+</script>
+</body>
+</html>
