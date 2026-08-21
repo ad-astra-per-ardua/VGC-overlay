@@ -105,6 +105,34 @@
 
 <section>
   <h2>경기 중 — 영상</h2>
+  <div class="row" style="margin-bottom:12px">
+    <button class="sm" id="mode-split">모드: 선수별 파일 4개</button>
+    <button class="sm" id="mode-combined">모드: 통합 영상 1개</button>
+  </div>
+
+  <div id="combined-box" style="display:none">
+    <div class="field">
+      <label>통합 영상 경로</label>
+      <input id="combined-video" placeholder="/videos/all4.mp4">
+    </div>
+    <p class="muted" style="margin:0 0 10px">
+      영상 하나에 4명이 이미 배치·싱크되어 있을 때 씁니다. 아래 4칸에
+      각 선수가 그 영상의 어느 사각형(원본 대비 %)에 있는지 지정하세요.
+      좌표를 눈으로 잡기 어려우면
+      <a href="crop-calibrator.html" target="_blank" style="color:var(--accent)">캘리브레이션 도구</a>
+      를 새 탭에서 열어 드래그로 잡고 값을 복사해오세요.
+    </p>
+    <p class="muted" style="margin:0 0 10px">
+      매 경기 배치가 항상 똑같다면(예: 영상 편집 시 1P를 항상 맨 왼쪽으로
+      고정) 아래 프리셋으로 한 번에 채우고 다시는 손댈 필요 없습니다.
+      슬롯 순서(1~4번)가 곧 화면 왼쪽부터의 순서가 됩니다.
+    </p>
+    <div class="row" style="margin-bottom:14px">
+      <button class="sm" id="preset-row4">프리셋: 가로 4분할 (1P~4P 순서대로 왼쪽부터)</button>
+      <button class="sm" id="preset-grid2x2">프리셋: 2×2 격자</button>
+    </div>
+  </div>
+
   <div id="slots"></div>
   <div class="row" style="margin-top:12px">
     <button id="play">재생</button>
@@ -249,6 +277,8 @@ const pushSongs = debounce((side) => patch({ songs: { [side]: state.songs[side] 
 function renderSlots() {
   const wrap = $('slots');
   wrap.innerHTML = '';
+  const combined = !!(state.match.combinedVideo);
+
   (state.match.slots || []).forEach((slot, i) => {
     const box = document.createElement('div');
     box.className = 'song';
@@ -279,27 +309,61 @@ function renderSlots() {
 
     const mini = document.createElement('div');
     mini.className = 'mini';
-    mini.style.gridTemplateColumns = '1fr 100px 1fr 1fr';
 
-    const video = document.createElement('input');
-    video.value = slot.video || ''; video.placeholder = '/videos/p1.mp4';
-    video.oninput = () => { state.match.slots[i].video = video.value; pushSlots(); };
+    if (combined) {
+      mini.style.gridTemplateColumns = '52px 52px 52px 52px 1fr 1fr';
+      const crop = slot.crop || { x: 0, y: 0, w: 50, h: 50 };
+      const mk = (key, ph) => {
+        const inp = document.createElement('input');
+        inp.type = 'number'; inp.step = '0.5'; inp.min = '0'; inp.max = '100';
+        inp.value = crop[key]; inp.title = ph; inp.style.width = '52px';
+        inp.oninput = () => {
+          const c = state.match.slots[i].crop || { x: 0, y: 0, w: 50, h: 50 };
+          c[key] = Number(inp.value) || 0;
+          state.match.slots[i].crop = c;
+          pushSlots();
+        };
+        return inp;
+      };
+      const x = mk('x', 'x%'), y = mk('y', 'y%'), w = mk('w', 'w%'), h = mk('h', 'h%');
 
-    const offset = document.createElement('input');
-    offset.type = 'number'; offset.step = '10';
-    offset.value = slot.offsetMs || 0;
-    offset.title = '싱크 보정 (ms). 양수면 그 선수 영상을 뒤로 당김';
-    offset.oninput = () => { state.match.slots[i].offsetMs = Number(offset.value) || 0; pushSlots(); };
+      const icon = document.createElement('input');
+      icon.value = slot.icon || ''; icon.placeholder = '/assets/icon1.png';
+      icon.oninput = () => { state.match.slots[i].icon = icon.value; pushSlots(); };
 
-    const icon = document.createElement('input');
-    icon.value = slot.icon || ''; icon.placeholder = '/assets/icon1.png';
-    icon.oninput = () => { state.match.slots[i].icon = icon.value; pushSlots(); };
+      const timeline = document.createElement('input');
+      timeline.value = slot.timeline || ''; timeline.placeholder = '/videos/p1.scores.json';
+      timeline.oninput = () => { state.match.slots[i].timeline = timeline.value; pushSlots(); };
 
-    const timeline = document.createElement('input');
-    timeline.value = slot.timeline || ''; timeline.placeholder = '/videos/p1.scores.json';
-    timeline.oninput = () => { state.match.slots[i].timeline = timeline.value; pushSlots(); };
+      mini.append(x, y, w, h, icon, timeline);
+      const hint = document.createElement('div');
+      hint.className = 'muted';
+      hint.style.cssText = 'grid-column:1/-1; font-size:11px; margin-top:2px';
+      hint.textContent = 'x, y, w, h — 통합 영상 원본 대비 % 좌표';
+      mini.appendChild(hint);
+    } else {
+      mini.style.gridTemplateColumns = '1fr 100px 1fr 1fr';
+      const video = document.createElement('input');
+      video.value = slot.video || ''; video.placeholder = '/videos/p1.mp4';
+      video.oninput = () => { state.match.slots[i].video = video.value; pushSlots(); };
 
-    mini.append(video, offset, icon, timeline);
+      const offset = document.createElement('input');
+      offset.type = 'number'; offset.step = '10';
+      offset.value = slot.offsetMs || 0;
+      offset.title = '싱크 보정 (ms). 양수면 그 선수 영상을 뒤로 당김';
+      offset.oninput = () => { state.match.slots[i].offsetMs = Number(offset.value) || 0; pushSlots(); };
+
+      const icon = document.createElement('input');
+      icon.value = slot.icon || ''; icon.placeholder = '/assets/icon1.png';
+      icon.oninput = () => { state.match.slots[i].icon = icon.value; pushSlots(); };
+
+      const timeline = document.createElement('input');
+      timeline.value = slot.timeline || ''; timeline.placeholder = '/videos/p1.scores.json';
+      timeline.oninput = () => { state.match.slots[i].timeline = timeline.value; pushSlots(); };
+
+      mini.append(video, offset, icon, timeline);
+    }
+
     box.append(head, mini);
     wrap.appendChild(box);
   });
@@ -327,6 +391,11 @@ function render() {
 
   renderSlots();
   updateBanPending();
+  const combined = !!(state.match.combinedVideo);
+  $('mode-split').classList.toggle('on', !combined);
+  $('mode-combined').classList.toggle('on', combined);
+  $('combined-box').style.display = combined ? '' : 'none';
+  $('combined-video').value = state.match.combinedVideo || '';
   $('meter').value = state.match.meter || 0;
   $('meter-val').textContent = Number(state.match.meter || 0).toFixed(2);
   $('meter-label').value = state.match.label || '';
@@ -397,6 +466,32 @@ document.querySelectorAll('[data-add]').forEach((b) => {
     renderSongs(side);
   };
 });
+
+$('mode-split').onclick = () => {
+  const patch1 = { match: { combinedVideo: '' } };
+  patch(patch1);
+};
+$('mode-combined').onclick = () => {
+  patch({ match: { combinedVideo: state.match.combinedVideo || '/videos/all4.mp4' } });
+};
+$('combined-video').oninput = debounce(() => patch({ match: { combinedVideo: $('combined-video').value } }), 250);
+
+// 배치가 매 경기 고정이면 한 번만 눌러두고 다시는 손댈 필요 없음.
+// 슬롯 순서(state.match.slots 의 인덱스)가 화면 왼쪽/위쪽부터의 순서와 대응됩니다.
+$('preset-row4').onclick = () => {
+  const n = (state.match.slots || []).length || 4;
+  const w = 100 / n;
+  state.match.slots.forEach((s, i) => { s.crop = { x: i * w, y: 0, w, h: 100 }; });
+  patch({ match: { slots: state.match.slots } });
+};
+$('preset-grid2x2').onclick = () => {
+  const coords = [{x:0,y:0},{x:50,y:0},{x:0,y:50},{x:50,y:50}];
+  state.match.slots.forEach((s, i) => {
+    const c = coords[i] || coords[i % 4];
+    s.crop = { x: c.x, y: c.y, w: 50, h: 50 };
+  });
+  patch({ match: { slots: state.match.slots } });
+};
 
 $('play').onclick = () => cmd({ type: 'play' });
 $('pause').onclick = () => cmd({ type: 'pause' });

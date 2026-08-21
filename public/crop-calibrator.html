@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>크롭 캘리브레이션</title>
+<style>
+  :root { --line:#2E2A26; --accent:#E9C78C; --panel:#1C1917; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:20px; background:#121010; color:#EDE6DE;
+         font:15px/1.5 "Pretendard","Noto Sans KR",system-ui,sans-serif; }
+  h1 { font-size:19px; margin:0 0 6px; }
+  p.muted { color:#A79B8E; font-size:13px; margin:0 0 16px; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+  button { background:#292420; color:#EDE6DE; border:1px solid var(--line); border-radius:7px;
+           padding:9px 15px; font:inherit; font-weight:600; cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  button.on { background:var(--accent); border-color:var(--accent); color:#1A1210; }
+  input[type=range] { flex:1; min-width:200px; }
+  input[type=file] { color:#EDE6DE; }
+  #stage {
+    position:relative; max-width:1280px; margin:0 auto;
+    background:#000; border:1px solid var(--line); border-radius:8px; overflow:hidden;
+    user-select:none;
+  }
+  #vid { display:block; width:100%; height:auto; }
+  #overlay { position:absolute; inset:0; cursor:crosshair; }
+  .box {
+    position:absolute; border:2px solid; pointer-events:none;
+    display:flex; align-items:flex-start; justify-content:flex-start;
+  }
+  .box span {
+    background:inherit; color:#000; font-size:12px; font-weight:700;
+    padding:1px 6px;
+  }
+  .box.slot0 { border-color:#46A8F0; } .box.slot0 span { background:#46A8F0; }
+  .box.slot1 { border-color:#F0553C; } .box.slot1 span { background:#F0553C; }
+  .box.slot2 { border-color:#9FE18F; } .box.slot2 span { background:#9FE18F; }
+  .box.slot3 { border-color:#E9C78C; } .box.slot3 span { background:#E9C78C; }
+  #panel { max-width:1280px; margin:16px auto 0; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+  th { color:#A79B8E; font-weight:600; }
+  textarea { width:100%; min-height:110px; margin-top:10px; background:#0E0C0B; color:#EDE6DE;
+             border:1px solid var(--line); border-radius:6px; padding:8px; font-family:ui-monospace,monospace; font-size:12px; }
+  .status { font-size:12px; color:#A79B8E; }
+</style>
+</head>
+<body>
+<h1>통합 영상 크롭 캘리브레이션</h1>
+<p class="muted">
+  4명이 한 영상 안에 배치된 파일을 열고, 각 선수 위치를 드래그로 지정하세요.
+  좌표(%)가 아래 표와 JSON에 나오면 컨트롤 패널의 해당 슬롯 x/y/w/h 칸에
+  그대로 옮기거나, JSON을 복사해 서버의 state.json 에 붙여넣으면 됩니다.
+  <strong>같은 레이아웃(예: 게임 클라이언트의 고정 4분할 화면)이면 매 경기
+  다시 잡을 필요 없이 이 좌표를 계속 재사용</strong>할 수 있습니다.
+</p>
+
+<div class="row">
+  <input type="file" id="file" accept="video/*">
+  <button id="active-0" class="slotbtn on" data-slot="0">1번 슬롯 그리기</button>
+  <button id="active-1" class="slotbtn" data-slot="1">2번 슬롯 그리기</button>
+  <button id="active-2" class="slotbtn" data-slot="2">3번 슬롯 그리기</button>
+  <button id="active-3" class="slotbtn" data-slot="3">4번 슬롯 그리기</button>
+  <button id="clear">전체 지우기</button>
+</div>
+<div class="row">
+  <button id="playpause">재생/정지</button>
+  <input type="range" id="scrub" min="0" max="1000" value="0" step="1">
+  <span class="status" id="time">0.0s</span>
+</div>
+
+<div id="stage">
+  <video id="vid" muted playsinline></video>
+  <div id="overlay"></div>
+</div>
+
+<div id="panel">
+  <table>
+    <thead><tr><th>슬롯</th><th>x%</th><th>y%</th><th>w%</th><th>h%</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <textarea id="json" readonly></textarea>
+  <div class="row" style="margin-top:8px">
+    <button id="copy">JSON 복사</button>
+    <span class="status" id="copy-status"></span>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const vid = $('vid');
+const overlay = $('overlay');
+
+const crops = [null, null, null, null];   // {x,y,w,h} in % — 원본 영상 기준
+let activeSlot = 0;
+let dragging = null;   // {startX, startY, el}
+
+const COLORS = ['#46A8F0', '#F0553C', '#9FE18F', '#E9C78C'];
+
+document.querySelectorAll('.slotbtn').forEach((b) => {
+  b.onclick = () => {
+    activeSlot = Number(b.dataset.slot);
+    document.querySelectorAll('.slotbtn').forEach((x) => x.classList.toggle('on', x === b));
+  };
+});
+
+$('file').onchange = (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  vid.src = URL.createObjectURL(f);
+  vid.load();
+};
+
+$('playpause').onclick = () => { vid.paused ? vid.play() : vid.pause(); };
+
+vid.addEventListener('loadedmetadata', () => {
+  $('scrub').max = Math.floor(vid.duration * 10);
+});
+vid.addEventListener('timeupdate', () => {
+  $('scrub').value = Math.floor(vid.currentTime * 10);
+  $('time').textContent = vid.currentTime.toFixed(1) + 's';
+});
+$('scrub').oninput = () => { vid.currentTime = $('scrub').value / 10; };
+
+function relPos(e) {
+  const rect = overlay.getBoundingClientRect();
+  const x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+  const y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+  return { x, y };
+}
+
+overlay.addEventListener('mousedown', (e) => {
+  const p = relPos(e);
+  dragging = { startX: p.x, startY: p.y };
+});
+overlay.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  const p = relPos(e);
+  const x = Math.min(dragging.startX, p.x), y = Math.min(dragging.startY, p.y);
+  const w = Math.abs(p.x - dragging.startX), h = Math.abs(p.y - dragging.startY);
+  crops[activeSlot] = { x: x * 100, y: y * 100, w: w * 100, h: h * 100 };
+  redraw();
+});
+window.addEventListener('mouseup', () => { dragging = null; });
+
+function redraw() {
+  overlay.querySelectorAll('.box').forEach((el) => el.remove());
+  crops.forEach((c, i) => {
+    if (!c) return;
+    const el = document.createElement('div');
+    el.className = 'box slot' + i;
+    el.style.left = c.x + '%'; el.style.top = c.y + '%';
+    el.style.width = c.w + '%'; el.style.height = c.h + '%';
+    el.innerHTML = `<span>${i + 1}</span>`;
+    overlay.appendChild(el);
+  });
+
+  const rows = $('rows');
+  rows.innerHTML = crops.map((c, i) => {
+    if (!c) return `<tr><td>${i + 1}</td><td colspan="4" style="color:#665">미지정</td></tr>`;
+    return `<tr><td>${i + 1}</td><td>${c.x.toFixed(1)}</td><td>${c.y.toFixed(1)}</td>` +
+           `<td>${c.w.toFixed(1)}</td><td>${c.h.toFixed(1)}</td></tr>`;
+  }).join('');
+
+  const jsonOut = crops.map((c) => c ? {
+    x: Math.round(c.x * 10) / 10, y: Math.round(c.y * 10) / 10,
+    w: Math.round(c.w * 10) / 10, h: Math.round(c.h * 10) / 10
+  } : null);
+  $('json').value = JSON.stringify(jsonOut, null, 2);
+}
+
+$('clear').onclick = () => { crops.fill(null); redraw(); };
+$('copy').onclick = () => {
+  navigator.clipboard.writeText($('json').value)
+    .then(() => { $('copy-status').textContent = '복사됨'; })
+    .catch(() => { $('copy-status').textContent = '복사 실패 — 직접 선택하세요'; });
+};
+
+redraw();
+</script>
+</body>
+</html>

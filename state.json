@@ -7,8 +7,8 @@
   },
   "teams": {
     "left": {
-      "name": "비순애사랑단",
-      "logo": "https://i.imgur.com/aL9xhIQ.png",
+      "name": "이마트빵도둑볶은우",
+      "logo": "",
       "score": 0,
       "players": [
         {
@@ -22,8 +22,8 @@
       ]
     },
     "right": {
-      "name": "이마트빵도둑볼은우",
-      "logo": "https://i.imgur.com/pap50yH.jpeg",
+      "name": "눈깜빡이기고로숨쉬기",
+      "logo": "",
       "score": 0,
       "players": [
         {
@@ -41,21 +41,21 @@
     "left": [
       {
         "title": "物凄いスペースシャトルでこいしが物凄いうた",
-        "jacket": "http://anzuinfo.s3.ap-northeast-2.amazonaws.com/1078_maximum.webp",
+        "jacket": "",
         "diff": "MXM",
         "level": "17.5",
         "banned": false
       },
       {
         "title": "雲海",
-        "jacket": "https://anzuinfo.s3.ap-northeast-2.amazonaws.com/1312_maximum.webp",
+        "jacket": "",
         "diff": "MXM",
         "level": "17",
-        "banned": true
+        "banned": false
       },
       {
         "title": "Chocolate Parade",
-        "jacket": "https://anzuinfo.s3.ap-northeast-2.amazonaws.com/1405_maximum.webp",
+        "jacket": "",
         "diff": "MXM",
         "level": "17.5",
         "banned": false
@@ -64,24 +64,24 @@
     "right": [
       {
         "title": "vivid landscape",
-        "jacket": "https://anzuinfo.s3.ap-northeast-2.amazonaws.com/1311_maximum.webp",
+        "jacket": "",
         "diff": "MXM",
         "level": "17.5",
         "banned": false
       },
       {
         "title": "PIZZATIME",
-        "jacket": "https://anzuinfo.s3.ap-northeast-2.amazonaws.com/1421_maximum.webp",
+        "jacket": "",
         "diff": "MXM",
         "level": "17.5",
         "banned": false
       },
       {
         "title": "超☆超☆光☆速☆出☆前☆最☆速!!! スピード★スター",
-        "jacket": "https://anzuinfo.s3.ap-northeast-2.amazonaws.com/1038_exhaust.webp",
+        "jacket": "",
         "diff": "EXH",
         "level": "17.5",
-        "banned": true
+        "banned": false
       }
     ]
   },
@@ -97,7 +97,13 @@
         "icon": "",
         "video": "",
         "offsetMs": 0,
-        "timeline": ""
+        "timeline": "",
+        "crop": {
+          "x": 0.0,
+          "y": 0,
+          "w": 25.0,
+          "h": 100
+        }
       },
       {
         "rank": "1st",
@@ -106,7 +112,13 @@
         "icon": "",
         "video": "",
         "offsetMs": 0,
-        "timeline": ""
+        "timeline": "",
+        "crop": {
+          "x": 25.0,
+          "y": 0,
+          "w": 25.0,
+          "h": 100
+        }
       },
       {
         "rank": "2nd",
@@ -115,7 +127,13 @@
         "icon": "",
         "video": "",
         "offsetMs": 0,
-        "timeline": ""
+        "timeline": "",
+        "crop": {
+          "x": 50.0,
+          "y": 0,
+          "w": 25.0,
+          "h": 100
+        }
       },
       {
         "rank": "4th",
@@ -124,11 +142,18 @@
         "icon": "",
         "video": "",
         "offsetMs": 0,
-        "timeline": ""
+        "timeline": "",
+        "crop": {
+          "x": 75.0,
+          "y": 0,
+          "w": 25.0,
+          "h": 100
+        }
       }
     ],
     "autoMeter": false,
     "maxDiff": 150000,
-    "labelStyle": "short"
+    "labelStyle": "short",
+    "combinedVideo": ""
   }
 }
