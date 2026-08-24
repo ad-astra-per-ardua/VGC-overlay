@@ -59,20 +59,6 @@
         "diff": "EXH",
         "level": "",
         "banned": false
-      },
-      {
-        "title": "",
-        "jacket": "",
-        "diff": "EXH",
-        "level": "",
-        "banned": false
-      },
-      {
-        "title": "",
-        "jacket": "",
-        "diff": "EXH",
-        "level": "",
-        "banned": false
       }
     ],
     "right": [
@@ -96,20 +82,6 @@
         "diff": "EXH",
         "level": "",
         "banned": false
-      },
-      {
-        "title": "",
-        "jacket": "",
-        "diff": "EXH",
-        "level": "",
-        "banned": false
-      },
-      {
-        "title": "",
-        "jacket": "",
-        "diff": "EXH",
-        "level": "",
-        "banned": false
       }
     ]
   },
@@ -125,42 +97,67 @@
         "icon": "",
         "video": "",
         "offsetMs": 0,
-        "timeline": "",
+        "timeline": "/tools/match.p1.scores.json",
         "crop": {
           "x": 0,
           "y": 0,
-          "w": 50,
+          "w": 25,
           "h": 100
         }
       },
       {
         "rank": "1st",
-        "team": "right",
+        "team": "left",
         "player": "2",
         "icon": "",
         "video": "",
         "offsetMs": 0,
-        "timeline": "",
+        "timeline": "/tools/match.p2.scores.json",
+        "crop": {
+          "x": 25,
+          "y": 0,
+          "w": 25,
+          "h": 100
+        }
+      },
+      {
+        "rank": "",
+        "team": "right",
+        "player": "3",
         "crop": {
           "x": 50,
           "y": 0,
-          "w": 50,
+          "w": 25,
           "h": 100
-        }
+        },
+        "timeline": "/tools/match.p3.scores.json"
+      },
+      {
+        "rank": "",
+        "team": "right",
+        "player": "4",
+        "crop": {
+          "x": 75,
+          "y": 0,
+          "w": 25,
+          "h": 100
+        },
+        "timeline": "/tools/match.p4.scores.json"
       }
     ],
-    "autoMeter": false,
-    "maxDiff": 150000,
+    "autoMeter": true,
+    "maxDiff": 500000,
     "labelStyle": "short",
-    "combinedVideo": "/videos/all4.mp4",
-    "autoRank": false,
+    "combinedVideo": "/videos/match_new.mp4 ",
+    "autoRank": true,
     "currentSide": "left",
     "currentSong": 0,
     "badges": {
       "mode": "manual",
       "left": "자선곡",
       "right": ""
-    }
+    },
+    "hudCrop": null
   },
   "strategy": {
     "used": true,
