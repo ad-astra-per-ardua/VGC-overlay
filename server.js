@@ -1,11 +1,4 @@
 'use strict';
-// 상태 서버: 의존성 없음. node server.js 로 실행.
-// - GET  /overlay.html   OBS 브라우저 소스용 오버레이
-// - GET  /control.html   오퍼레이터 컨트롤 패널
-// - GET  /api/state      현재 상태 스냅샷
-// - GET  /api/events     SSE 스트림 (state / cmd)
-// - POST /api/state      부분 병합 패치 → 저장 + 브로드캐스트
-// - POST /api/cmd        일회성 명령 (저장 안 함)
 
 const http = require('http');
 const fs = require('fs');
@@ -26,7 +19,6 @@ const MIME = {
   '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf'
 };
 
-// state.json 이 없거나 깨져 있으면 이 값으로 새로 만듭니다.
 const DEFAULT_STATE = {
   view: 'select',
   round: { kicker: 'ARENA BATTLE', title: 'ROUND 1', sub: 'EVOLVE' },
@@ -62,8 +54,7 @@ const DEFAULT_STATE = {
 let state;
 try {
   state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-  // 예전 state.json 에 새 기능의 필드가 없을 수 있으므로 기본값을 밑에 깔아줍니다.
-  // (사용자가 입력한 값은 그대로 두고, 빠진 키만 채웁니다)
+
   state = fillDefaults(state, DEFAULT_STATE);
 } catch (e) {
   state = DEFAULT_STATE;
@@ -80,19 +71,16 @@ function fillDefaults(cur, def) {
   return out;
 }
 let clients = [];
-let diag = { timelines: {}, at: 0 };   // 오버레이가 보고하는 타임라인 로드 상태
+let diag = { timelines: {}, at: 0 };   
 let saveTimer = null;
 
-/* ── 프리셋 저장소 ────────────────────────────────────
-   presets/<이름>.json. 이름에 경로 문자가 섞이면 서버 밖 파일을 덮어쓸 수
-   있으므로, 허용 문자만 남기고 검증에 실패하면 아예 거부합니다. */
 const PRESET_DIR = path.join(ROOT, 'presets');
 
 function presetPath(name) {
   if (typeof name !== 'string') return null;
   const clean = name.trim();
   if (!clean || clean.length > 60) return null;
-  // 경로 구분자·상위 이동·제어문자 차단
+  
   if (/[\\/:*?"<>|]/.test(clean) || clean.includes('..') || /[\x00-\x1f]/.test(clean)) return null;
   return path.join(PRESET_DIR, clean + '.json');
 }
@@ -122,9 +110,6 @@ function send(event, data) {
   });
 }
 
-// 객체는 재귀 병합, 배열은 통째로 교체 (곡 목록/슬롯은 항상 전체를 보냄)
-// 단, 원래 배열이던 자리에 배열이 아닌 값이 오면 무시합니다 — 잘못된 패치 하나로
-// 오버레이의 forEach 가 터져 방송 화면이 멈추는 것을 막습니다.
 function merge(target, patch) {
   for (const k of Object.keys(patch)) {
     const v = patch[k];
@@ -156,7 +141,7 @@ function readBody(req) {
 function serveStatic(req, res, pathname) {
   const rel = pathname === '/' ? '/control.html' : decodeURIComponent(pathname);
   const base = path.basename(rel);
-  // 폴더 구조가 평평해져도 찾도록 후보를 넓게 잡음
+  
   const candidates = [
     path.join(ROOT, 'public', rel), path.join(ROOT, rel),
     path.join(ROOT, 'public', base), path.join(ROOT, base)
@@ -170,7 +155,6 @@ function serveStatic(req, res, pathname) {
   const type = MIME[path.extname(file).toLowerCase()] || 'application/octet-stream';
   const stat = fs.statSync(file);
 
-  // 영상은 Range 요청 지원 (seek 필수)
   const range = req.headers.range;
   if (range && /^bytes=/.test(range)) {
     const [startRaw, endRaw] = range.replace('bytes=', '').split('-');
@@ -227,9 +211,6 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  /* ── 프리셋 (경기별 데이터를 미리 만들어두고 당일엔 불러오기만) ──
-     presets/ 폴더에 파일 하나씩. 라이브 상태(state.json)와 완전히 분리되어
-     있어서, 프리셋을 저장해도 방송 화면은 꿈쩍하지 않습니다. */
   if (pathname === '/api/presets' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': MIME['.json'] });
     return res.end(JSON.stringify({ presets: listPresets() }));
@@ -255,7 +236,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await readBody(req);
       fs.mkdirSync(PRESET_DIR, { recursive: true });
-      // 임시 파일에 먼저 쓰고 교체 — 저장 중 정전/강제종료에도 기존 파일이 안 깨집니다
+      
       const tmp = file + '.tmp';
       fs.writeFileSync(tmp, JSON.stringify(body, null, 2));
       fs.renameSync(tmp, file);
@@ -275,9 +256,6 @@ const server = http.createServer(async (req, res) => {
     return res.end(JSON.stringify({ ok: true, presets: listPresets() }));
   }
 
-  /* ── 진단 ── 오버레이가 타임라인 로드 결과를 보고하면 컨트롤이 읽어갑니다.
-     상태(state)에 섞지 않는 이유: 방송 데이터가 아니고, SSE 로 돌려보내면
-     오버레이가 다시 렌더되는 순환이 생기기 때문입니다. */
   if (pathname === '/api/diag' && req.method === 'POST') {
     try {
       diag = await readBody(req);

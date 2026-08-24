@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import json
 import os
@@ -12,15 +13,12 @@ try:
 except Exception:
     pass
 
-
-
 def load_cfg(path):
     with open(path, encoding='utf-8') as f:
         cfg = json.load(f)
     if 'players' not in cfg:
         cfg['players'] = [{'fields': cfg['fields']}]
     return cfg
-
 
 def main():
     ap = argparse.ArgumentParser()
@@ -35,7 +33,7 @@ def main():
     args = ap.parse_args()
 
     cfg = load_cfg(args.config)
-    fields = cfg['players'][0]['fields']
+    fields = cfg['players'][0]['fields']                
     x0 = min(f['x'] for f in fields)
     y0 = min(f['y'] for f in fields)
     x1 = max(f['x'] + f['w'] for f in fields)
@@ -90,6 +88,7 @@ def main():
         if args.scale != 1.0:
             crop = cv2.resize(crop, None, fx=args.scale, fy=args.scale,
                               interpolation=cv2.INTER_CUBIC)
+                        
         label_h = 26
         canvas = np.zeros((crop.shape[0] + label_h, crop.shape[1], 3), np.uint8)
         canvas[label_h:] = crop
@@ -114,7 +113,6 @@ def main():
     print('이미지를 열어 각 칸의 점수 8자리를 읽고,')
     print('batch_learn.py 에 "시각=점수" 목록으로 넘기세요.')
     print('예: python batch_learn.py --video ... --config ... --pairs "0=00775736,2=00812345"')
-
 
 if __name__ == '__main__':
     main()

@@ -1,13 +1,19 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import os
+import subprocess
+import sys
+import tempfile
+
 try:
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
     sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 except Exception:
     pass
 
-
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, 'sdvx_score.py')
-
 
 def load_cfg(path):
     with open(path, encoding='utf-8') as f:
@@ -15,7 +21,6 @@ def load_cfg(path):
     if 'players' not in cfg:
         cfg['players'] = [{'fields': cfg['fields']}]
     return cfg
-
 
 def missing(templates_dir, n_fields):
     out = []
@@ -26,7 +31,6 @@ def missing(templates_dir, n_fields):
             have = {os.path.splitext(x)[0] for x in os.listdir(d) if x.endswith('.png')}
         out.append({c for c in '0123456789'} - have)
     return out
-
 
 def parse_pairs(text):
     pairs = []
@@ -47,7 +51,6 @@ def parse_pairs(text):
         except ValueError:
             print(f'  건너뜀 (시각 오류): {chunk}', file=sys.stderr)
     return pairs
-
 
 def main():
     ap = argparse.ArgumentParser()
@@ -73,6 +76,7 @@ def main():
     total_digits = sum(f['digits'] for f in cfg['players'][0]['fields'])
 
     print(f'{len(pairs)}개 항목으로 학습을 시작합니다 (필드 {n_fields}개, {total_digits}자리)\n')
+
     child_env = dict(os.environ, PYTHONIOENCODING='utf-8')
     tmpdir = tempfile.mkdtemp(prefix='batchlearn_')
     used = 0
@@ -121,7 +125,6 @@ def main():
         print(f'\n모든 필드에 0~9 확보 완료 ({used}개 프레임 사용). run 으로 넘어가세요.')
         print(f'  python sdvx_score.py run --video {args.video} --config {args.config} \\')
         print(f'      --out ../videos/match.scores.json')
-
 
 if __name__ == '__main__':
     main()

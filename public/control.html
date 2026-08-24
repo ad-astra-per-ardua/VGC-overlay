@@ -112,7 +112,6 @@
     <button id="str-next" disabled>다음 단계</button>
     <button id="str-replay">STR 애니 다시</button>
     <button id="str-cancel">지금 닫기</button>
-    <button id="str-unuse" style="margin-left:auto">사용 기록 초기화</button>
   </div>
   <div class="row" id="str-choose" style="margin-top:10px; display:none">
     <span style="color:#A79B8E; font-size:12px; margin-right:4px">대체할 곡 선택:</span>
@@ -183,14 +182,25 @@
       를 새 탭에서 열어 드래그로 잡고 값을 복사해오세요.
     </p>
     <p class="muted" style="margin:0 0 10px">
-      매 경기 배치가 항상 똑같다면(예: 영상 편집 시 1P를 항상 맨 왼쪽으로
-      고정) 아래 프리셋으로 한 번에 채우고 다시는 손댈 필요 없습니다.
-      슬롯 순서(1~4번)가 곧 화면 왼쪽부터의 순서가 됩니다.
+      크롭·HUD 좌표는 위 "라운드 포맷" 버튼(R1·R2·R4)이 라운드 구도에 맞춰
+      한 번에 채웁니다. 아래는 그 값을 실제 영상에 맞게 미세조정할 때만
+      쓰세요 — 매 경기 다시 누를 필요는 없습니다.
     </p>
-    <div class="row" style="margin-bottom:14px">
-      <button class="sm" id="preset-row4">프리셋: 가로 4분할 (2v2)</button>
-      <button class="sm" id="preset-row2">프리셋: 가로 2분할 (1v1)</button>
-      <button class="sm" id="preset-grid2x2">프리셋: 2×2 격자</button>
+
+    <div id="hud-box" style="display:none; margin-bottom:14px">
+      <div class="row">
+        <span class="muted" style="font-size:12px; min-width:96px">HUD 띠 좌표</span>
+        <input id="hud-x" type="number" step="0.5" style="width:64px" title="x%">
+        <input id="hud-y" type="number" step="0.5" style="width:64px" title="y%">
+        <input id="hud-w" type="number" step="0.5" style="width:64px" title="w%">
+        <input id="hud-h" type="number" step="0.5" style="width:64px" title="h%">
+        <span class="muted" style="font-size:11px">x, y, w, h — 원본 대비 %</span>
+      </div>
+      <p class="muted" style="margin:8px 0 0; font-size:12px">
+        게임 자체의 대전 미터·턴·양쪽 점수가 들어있는 상단 띠 좌표입니다.
+        R2(메가믹스)에서만 나타나며, 오버레이 미터 자리에 그대로 얹힙니다.
+        우리 스코어미터와 자동 순위는 이때 자동으로 꺼집니다.
+      </p>
     </div>
   </div>
 
@@ -291,7 +301,7 @@
 'use strict';
 
 let state = null;
-let editing = false;
+let editing = false;   
 
 const pendingBans = { left: new Map(), right: new Map() };
 
@@ -336,6 +346,7 @@ function renderSongs(side) {
     const banBtn = document.createElement('button');
     banBtn.className = 'ban' + (dirty ? ' pending' : target ? ' on' : '');
     banBtn.textContent = dirty ? (target ? '밴 예정' : '해제 예정') : (target ? 'BANNED' : 'BAN');
+    
     const strAct = (state.strategy && state.strategy.active) || null;
     const isStrTarget = !!strAct && strAct.side === side && strAct.index === i;
     if (isStrTarget) {
@@ -345,7 +356,7 @@ function renderSongs(side) {
     banBtn.onclick = () => {
       const cur = pend.has(i) ? pend.get(i) : !!song.banned;
       pend.set(i, !cur);
-      if (pend.get(i) === !!song.banned) pend.delete(i);
+      if (pend.get(i) === !!song.banned) pend.delete(i);   
       renderSongs(side);
       updateBanPending();
     };
@@ -356,26 +367,38 @@ function renderSongs(side) {
     const st = state.strategy || {};
     if (isStrTarget) {
       strBtn.title = '현재 STRATEGY 대상';
-    } else if (st.used) {
-      strBtn.disabled = true;
-      strBtn.title = 'STRATEGY 는 이미 사용했습니다 (대회 통틀어 1회)';
     } else if (strAct) {
       strBtn.disabled = true;
       strBtn.title = '다른 곡에 STRATEGY 진행 중입니다';
     } else if (target) {
-      strBtn.disabled = true;
+      strBtn.disabled = true;                    
       strBtn.title = '밴된 곡에는 STRATEGY 를 쓸 수 없습니다';
     } else if (!(st.pool || []).some((s) => (s.title || '').trim())) {
       strBtn.disabled = true;
       strBtn.title = '먼저 STRATEGY 후보 곡을 입력하세요';
     }
-    strBtn.onclick = () => startStrategy(side, i);
+    strBtn.onclick = () => {
+      if (isStrTarget) {
+        // 이미 진행 중인 곡의 배지를 다시 누르면 "취소" 로 동작합니다.
+        // 예전엔 startStrategy 를 다시 불러 phase 를 aim 으로 되돌렸는데,
+        // 그러면 오버레이 연출(카드)은 사라져도 active 는 그대로 남아
+        // 다른 곡들이 계속 "진행 중" 으로 잠긴 채였습니다.
+        if (strAutoCloseTimer) { clearTimeout(strAutoCloseTimer); strAutoCloseTimer = null; }
+        state.strategy.active = null;
+        patch({ strategy: { active: null } });
+        renderSongs('left'); renderSongs('right');
+        renderStrategyUI();
+      } else {
+        startStrategy(side, i);
+      }
+    };
 
     const del = document.createElement('button');
     del.textContent = '×';
     del.onclick = () => {
       state.songs[side].splice(i, 1);
-      pendingBans[side].clear();
+      pendingBans[side].clear();      
+
       const act = state.strategy && state.strategy.active;
       if (act && act.side === side) {
         if (act.index === i) state.strategy.active = null;
@@ -422,6 +445,17 @@ function renderSlots() {
   const wrap = $('slots');
   wrap.innerHTML = '';
   const combined = !!(state.match.combinedVideo);
+  const hud = $('hud-box');
+  if (hud) {
+    hud.style.display = state.match.hudCrop ? '' : 'none';
+    if (state.match.hudCrop) {
+      const h = state.match.hudCrop;
+      if ($('hud-x')) $('hud-x').value = h.x;
+      if ($('hud-y')) $('hud-y').value = h.y;
+      if ($('hud-w')) $('hud-w').value = h.w;
+      if ($('hud-h')) $('hud-h').value = h.h;
+    }
+  }
 
   (state.match.slots || []).forEach((slot, i) => {
     const box = document.createElement('div');
@@ -637,6 +671,7 @@ document.querySelectorAll('#badge-manual-box button[data-badge]').forEach((btn) 
     const side = btn.dataset.badge;
     const text = btn.dataset.text;
     b[side] = text;
+
     if (text) b[side === 'left' ? 'right' : 'left'] = '';
     patch({ match: { badges: b } });
     renderBadgeUI();
@@ -740,6 +775,7 @@ $('preset-load').onclick = async () => {
     const res = await fetch('/api/presets/' + encodeURIComponent(name));
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
+    
     if (data.strategy) data.strategy.active = null;
     await patch(data);
     $('preset-name').value = name;
@@ -764,7 +800,7 @@ $('preset-delete').onclick = async () => {
 
 refreshPresets();
 
-function applyFormat(songsPerSide, playersPerTeam, note) {
+function applyFormat(songsPerSide, playersPerTeam, note, hud) {
   ['left', 'right'].forEach((side) => {
     const arr = state.songs[side] || (state.songs[side] = []);
     while (arr.length > songsPerSide) arr.pop();
@@ -782,19 +818,33 @@ function applyFormat(songsPerSide, playersPerTeam, note) {
   const s = state.match.slots || (state.match.slots = []);
   while (s.length > total) s.pop();
   while (s.length < total) s.push({ rank: '', team: 'left', player: '', crop: null });
+  
   s.forEach((slot, i) => {
     slot.team = i < playersPerTeam ? 'left' : 'right';
-    slot.crop = { x: (100 / total) * i, y: 0, w: 100 / total, h: 100 };
   });
 
-  patch({ songs: state.songs, match: { slots: s }, strategy: state.strategy });
+  // R2(메가믹스)만 상단에 게임 HUD 띠를 쓰고, 다른 라운드로 바꾸면 꺼둡니다.
+  // 켤 때는 "상단 25% HUD + 아래 75% 좌우 2분할"을 기본값으로 잡습니다.
+  if (hud) {
+    s.forEach((slot, i) => {
+      slot.crop = { x: (100 / total) * i, y: 25, w: 100 / total, h: 75 };
+    });
+    state.match.hudCrop = { x: 0, y: 0, w: 100, h: 25 };
+  } else {
+    s.forEach((slot, i) => {
+      slot.crop = { x: (100 / total) * i, y: 0, w: 100 / total, h: 100 };
+    });
+    state.match.hudCrop = null;
+  }
+
+  patch({ songs: state.songs, match: { slots: s, hudCrop: state.match.hudCrop }, strategy: state.strategy });
   renderSongs('left'); renderSongs('right'); renderSlots(); updateBanPending(); renderStrategyUI();
   $('fmt-note').textContent = note;
 }
 
-$('fmt-r1').onclick = () => applyFormat(3, 2, '적용됨 — 각 팀 2명, 각 진영 3곡. 경기 화면 가로 4분할.');
-$('fmt-r2').onclick = () => applyFormat(5, 1, '적용됨 — 1v1 메가믹스, 각 5곡(오버레이는 오각형 배치). 경기 화면 가로 2분할.');
-$('fmt-r4').onclick = () => applyFormat(2, 1, '적용됨 — 1v1 싱글, 각 2곡. 서로 하나씩 밴하세요. 경기 화면 가로 2분할.');
+$('fmt-r1').onclick = () => applyFormat(3, 2, '적용됨 — 각 팀 2명, 각 진영 3곡. 경기 화면 가로 4분할.', false);
+$('fmt-r2').onclick = () => applyFormat(5, 1, '적용됨 — 1v1 메가믹스, 각 5곡(오버레이는 오각형 배치). 게임 HUD 띠 + 아래 2분할이 자동으로 켜집니다.', true);
+$('fmt-r4').onclick = () => applyFormat(2, 1, '적용됨 — 1v1 싱글, 각 2곡. 서로 하나씩 밴하세요. 경기 화면 가로 2분할(HUD 없음).', false);
 
 function strPool() {
   const p = (state.strategy && state.strategy.pool) || [];
@@ -864,14 +914,12 @@ function renderStrategyUI() {
   const st = state.strategy || {};
   const act = st.active;
 
-  $('str-status').textContent = st.used ? '— 사용 완료' : '— 미사용';
+  $('str-status').textContent = '';
   $('str-next').disabled = !act || act.phase !== 'aim';
   $('str-choose').style.display = act && act.phase === 'cards' ? '' : 'none';
 
   if (!act) {
-    $('str-phase').textContent = st.used
-      ? 'STRATEGY 사용 완료. 다시 쓰려면 "사용 기록 초기화" 를 누르세요.'
-      : '대기 중 — 곡 목록의 STR 버튼으로 대상을 지정하세요.';
+    $('str-phase').textContent = '대기 중 — 곡 목록의 STR 버튼으로 대상을 지정하세요.';
     return;
   }
   const label = { aim: '조준 연출 중', cards: '후보 공개 — 대체할 곡을 고르세요',
@@ -898,18 +946,19 @@ document.querySelectorAll('#str-choose button').forEach((btn) => {
     if (choice !== 'reset') {
       const picked = strPool()[choice];
       if (!(picked.title || '').trim()) { alert('그 자리에 후보 곡이 비어 있습니다.'); return; }
+      
       state.songs[act.side][act.index] = {
         title: picked.title, jacket: picked.jacket,
         diff: picked.diff, level: picked.level, banned: false
       };
       pendingBans[act.side].delete(act.index);
+      
       state.strategy.replacedSide = act.side;
       state.strategy.replacedIndex = act.index;
     }
 
     act.phase = 'result';
     act.choice = choice;
-    state.strategy.used = true;
     patch({ strategy: state.strategy, songs: { [act.side]: state.songs[act.side] } });
     renderSongs(act.side);
     renderStrategyUI();
@@ -930,19 +979,10 @@ document.querySelectorAll('#str-choose button').forEach((btn) => {
 $('str-replay').onclick = () => cmd({ type: 'replayStrategy' });
 
 $('str-cancel').onclick = () => {
+  
   if (strAutoCloseTimer) { clearTimeout(strAutoCloseTimer); strAutoCloseTimer = null; }
   state.strategy.active = null;
   patch({ strategy: { active: null } });
-  renderSongs('left'); renderSongs('right');
-  renderStrategyUI();
-};
-
-$('str-unuse').onclick = () => {
-  if (!confirm('STRATEGY 사용 기록을 초기화할까요? (이미 교체된 곡은 되돌아가지 않습니다)')) return;
-  if (strAutoCloseTimer) { clearTimeout(strAutoCloseTimer); strAutoCloseTimer = null; }
-  state.strategy.used = false;
-  state.strategy.active = null;
-  patch({ strategy: state.strategy });
   renderSongs('left'); renderSongs('right');
   renderStrategyUI();
 };
@@ -1011,29 +1051,15 @@ $('mode-combined').onclick = () => {
 };
 $('combined-video').oninput = debounce(() => patch({ match: { combinedVideo: $('combined-video').value } }), 250);
 
-$('preset-row4').onclick = () => {
-  const n = (state.match.slots || []).length || 4;
-  const w = 100 / n;
-  state.match.slots.forEach((s, i) => { s.crop = { x: i * w, y: 0, w, h: 100 }; });
-  patch({ match: { slots: state.match.slots } });
-};
-$('preset-row2').onclick = () => {
-  const s = state.match.slots;
-  while (s.length > 2) s.pop();
-  while (s.length < 2) s.push({ rank: '', team: s.length ? 'right' : 'left', player: '' });
-  s[0].team = 'left'; s[1].team = 'right';
-  s.forEach((slot, i) => { slot.crop = { x: i * 50, y: 0, w: 50, h: 100 }; });
-  patch({ match: { slots: s } });
-  renderSlots();
-};
-
-$('preset-grid2x2').onclick = () => {  const coords = [{x:0,y:0},{x:50,y:0},{x:0,y:50},{x:50,y:50}];
-  state.match.slots.forEach((s, i) => {
-    const c = coords[i] || coords[i % 4];
-    s.crop = { x: c.x, y: c.y, w: 50, h: 50 };
-  });
-  patch({ match: { slots: state.match.slots } });
-};
+['x', 'y', 'w', 'h'].forEach((k) => {
+  const el = $(`hud-${k}`);
+  if (!el) return;
+  el.oninput = () => {
+    if (!state.match.hudCrop) return;
+    state.match.hudCrop[k] = Number(el.value) || 0;
+    patch({ match: { hudCrop: state.match.hudCrop } });
+  };
+});
 
 $('play').onclick = () => cmd({ type: 'play' });
 $('pause').onclick = () => cmd({ type: 'pause' });
