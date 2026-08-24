@@ -1,5 +1,5 @@
 {
-  "view": "songs",
+  "view": "match",
   "round": {
     "kicker": "ARENA BATTLE",
     "title": "ROUND 1",
@@ -7,8 +7,8 @@
   },
   "teams": {
     "left": {
-      "name": "이마트빵도둑볶은우",
-      "logo": "",
+      "name": "1111 2222",
+      "logo": "https://i.imgur.com/pap50yH.jpeg",
       "score": 0,
       "players": [
         {
@@ -22,8 +22,8 @@
       ]
     },
     "right": {
-      "name": "눈깜빡이기고로숨쉬기",
-      "logo": "",
+      "name": "22222 3333",
+      "logo": "https://i.imgur.com/aL9xhIQ.png",
       "score": 0,
       "players": [
         {
@@ -47,17 +47,31 @@
         "banned": false
       },
       {
-        "title": "雲海",
+        "title": "1",
         "jacket": "",
-        "diff": "MXM",
-        "level": "17",
+        "diff": "EXH",
+        "level": "",
         "banned": false
       },
       {
-        "title": "Chocolate Parade",
+        "title": "",
         "jacket": "",
-        "diff": "MXM",
-        "level": "17.5",
+        "diff": "EXH",
+        "level": "",
+        "banned": false
+      },
+      {
+        "title": "",
+        "jacket": "",
+        "diff": "EXH",
+        "level": "",
+        "banned": false
+      },
+      {
+        "title": "",
+        "jacket": "",
+        "diff": "EXH",
+        "level": "",
         "banned": false
       }
     ],
@@ -77,10 +91,24 @@
         "banned": false
       },
       {
-        "title": "超☆超☆光☆速☆出☆前☆最☆速!!! スピード★スター",
+        "title": "",
         "jacket": "",
         "diff": "EXH",
-        "level": "17.5",
+        "level": "",
+        "banned": false
+      },
+      {
+        "title": "",
+        "jacket": "",
+        "diff": "EXH",
+        "level": "",
+        "banned": false
+      },
+      {
+        "title": "",
+        "jacket": "",
+        "diff": "EXH",
+        "level": "",
         "banned": false
       }
     ]
@@ -93,60 +121,30 @@
       {
         "rank": "3rd",
         "team": "left",
-        "player": "장박짱",
+        "player": "1",
         "icon": "",
         "video": "",
         "offsetMs": 0,
         "timeline": "",
         "crop": {
-          "x": 0.0,
+          "x": 0,
           "y": 0,
-          "w": 25.0,
+          "w": 50,
           "h": 100
         }
       },
       {
         "rank": "1st",
-        "team": "left",
-        "player": "소구리마",
-        "icon": "",
-        "video": "",
-        "offsetMs": 0,
-        "timeline": "",
-        "crop": {
-          "x": 25.0,
-          "y": 0,
-          "w": 25.0,
-          "h": 100
-        }
-      },
-      {
-        "rank": "2nd",
         "team": "right",
-        "player": "MindBlow",
+        "player": "2",
         "icon": "",
         "video": "",
         "offsetMs": 0,
         "timeline": "",
         "crop": {
-          "x": 50.0,
+          "x": 50,
           "y": 0,
-          "w": 25.0,
-          "h": 100
-        }
-      },
-      {
-        "rank": "4th",
-        "team": "right",
-        "player": "쿠크시",
-        "icon": "",
-        "video": "",
-        "offsetMs": 0,
-        "timeline": "",
-        "crop": {
-          "x": 75.0,
-          "y": 0,
-          "w": 25.0,
+          "w": 50,
           "h": 100
         }
       }
@@ -154,6 +152,40 @@
     "autoMeter": false,
     "maxDiff": 150000,
     "labelStyle": "short",
-    "combinedVideo": ""
+    "combinedVideo": "/videos/all4.mp4",
+    "autoRank": false,
+    "currentSide": "left",
+    "currentSong": 0,
+    "badges": {
+      "mode": "manual",
+      "left": "자선곡",
+      "right": ""
+    }
+  },
+  "strategy": {
+    "used": true,
+    "pool": [
+      {
+        "title": "1",
+        "jacket": "",
+        "diff": "EXH",
+        "level": ""
+      },
+      {
+        "title": "2",
+        "jacket": "",
+        "diff": "EXH",
+        "level": ""
+      },
+      {
+        "title": "3",
+        "jacket": "",
+        "diff": "EXH",
+        "level": ""
+      }
+    ],
+    "active": null,
+    "replacedSide": "left",
+    "replacedIndex": 1
   }
 }
