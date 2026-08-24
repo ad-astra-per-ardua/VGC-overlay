@@ -42,13 +42,17 @@ const DEFAULT_STATE = {
     label: '', meter: 0, meterVisible: true,
     autoMeter: false, autoRank: false,
     combinedVideo: '', maxDiff: 150000, labelStyle: 'short',
+    hudCrop: null,
+    badges: { mode: 'auto', left: '', right: '' },
+    currentSide: '', currentSong: 0,
     slots: [
       { rank: '1st', team: 'left', player: '', icon: '', video: '', offsetMs: 0 },
       { rank: '2nd', team: 'left', player: '', icon: '', video: '', offsetMs: 0 },
       { rank: '3rd', team: 'right', player: '', icon: '', video: '', offsetMs: 0 },
       { rank: '4th', team: 'right', player: '', icon: '', video: '', offsetMs: 0 }
     ]
-  }
+  },
+  strategy: { active: null, pool: [] }
 };
 
 let state;
