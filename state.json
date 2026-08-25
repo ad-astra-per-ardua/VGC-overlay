@@ -115,7 +115,7 @@
   },
   "match": {
     "label": "",
-    "meter": 0,
+    "meter": 0.28,
     "meterVisible": true,
     "slots": [
       {
@@ -160,7 +160,8 @@
       "mode": "manual",
       "left": "자선곡",
       "right": ""
-    }
+    },
+    "hudCrop": null
   },
   "strategy": {
     "used": true,
