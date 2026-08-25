@@ -1095,7 +1095,7 @@ function renderCombinedFeeds(slots) {
 
   if (!combinedVideo) {
     combinedVideo = document.createElement('video');
-    combinedVideo.muted = true;
+    combinedVideo.muted = false;
     combinedVideo.playsInline = true;
     combinedVideo.preload = 'auto';
     combinedVideo.style.cssText = 'position:fixed; left:-9999px; top:-9999px; width:1px; height:1px;';

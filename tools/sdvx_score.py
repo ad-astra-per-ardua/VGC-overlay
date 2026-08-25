@@ -14,9 +14,9 @@ try:
 except Exception:
     pass
 
-CELL_H = 32                                                       
-SEARCH_MARGIN = 0.40                                          
-MATCH_THRESHOLD = 0.45                       
+CELL_H = 32
+SEARCH_MARGIN = 0.40
+MATCH_THRESHOLD = 0.45
 
 def load_config(path):
     with open(path, encoding='utf-8') as f:
@@ -39,7 +39,7 @@ def field_strip(frame, field):
     bright = max(60, int(hi * 0.6))
     mask = (gray >= bright).astype(np.uint8) * 255
     rows = np.flatnonzero(mask.max(axis=1) > 0)
-    if rows.size < 2:                                        
+    if rows.size < 2:
         _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
         rows = np.flatnonzero(mask.max(axis=1) > 0)
     if rows.size >= 2:
@@ -57,7 +57,7 @@ def binarize_cell(cell):
         cell = cv2.cvtColor(cell, cv2.COLOR_BGR2GRAY)
     if cell.dtype != np.uint8:
         cell = cell.astype(np.uint8)
-                                    
+
     uniq = np.unique(cell)
     if uniq.size <= 2 and set(uniq.tolist()) <= {0, 255}:
         return cell
@@ -156,7 +156,7 @@ def match_cell(window, templates):
     best_digit, best_score = None, -1.0
     for d, t in templates.items():
         win = window
-        if win.shape[1] < t.shape[1]:                            
+        if win.shape[1] < t.shape[1]:
             pad = t.shape[1] - win.shape[1]
             win = cv2.copyMakeBorder(win, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=0)
         score = float(cv2.matchTemplate(win, t, cv2.TM_CCOEFF_NORMED).max())
@@ -203,8 +203,8 @@ def safe_workers(requested, width, height, hard_cap=None):
     except Exception:
         pass
 
-    budget_mb = avail_mb * 0.5                         
-    est_per_proc = per_frame_mb * 20                        
+    budget_mb = avail_mb * 0.5
+    est_per_proc = per_frame_mb * 20
     fit = int(budget_mb // max(1, est_per_proc))
     return max(1, min(requested, hard_cap, fit))
 
@@ -217,17 +217,17 @@ def run_range(video, cfg, templates, start_frame, end_frame, stride, src_fps,
         cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
 
     players = cfg['players']
-    samples = []                                           
+    samples = []
     idx = start_frame
     while idx < end_frame:
-        ok = cap.grab()                               
+        ok = cap.grab()
         if not ok:
             break
         if idx % stride == 0:
             try:
                 ok, frame = cap.retrieve()
             except cv2.error:
-                                                        
+
                 ok, frame = False, None
             if ok and frame is not None:
                 values = recognize_frame(frame, players, templates, MATCH_THRESHOLD)
@@ -243,6 +243,45 @@ def _worker(job):
     templates = [load_templates(templates_dir, i)
                  for i in range(len(cfg['players'][0]['fields']))]
     return run_range(video, cfg, templates, start, end, stride, src_fps, hwaccel=hwaccel)
+
+def parse_timestamp(s):
+    """"mm:ss", "h:mm:ss", 또는 그냥 초(숫자)를 초 단위 float 로 변환."""
+    raw = s
+    s = str(s).strip()
+    try:
+        if ':' not in s:
+            return float(s)
+        parts = [float(p) for p in s.split(':')]
+        secs = 0.0
+        for p in parts:
+            secs = secs * 60 + p
+        return secs
+    except ValueError:
+        raise SystemExit(f'--breaks 의 시각을 이해할 수 없습니다: {raw!r} '
+                         f'("01:30" 또는 초 단위 숫자로 적어주세요)')
+
+
+def load_breakpoints(raw, breaks_file):
+    """--breaks(JSON 문자열) 또는 --breaks-file(JSON 파일)에서 곡 전환 시각 목록을 읽습니다.
+
+    형식: ["01:30", "03:12", "04:50"] 처럼 mm:ss 문자열 배열이거나,
+    숫자(초) 배열이어도 됩니다. 두 형식을 섞어도 됩니다.
+    """
+    text = raw
+    if breaks_file:
+        with open(breaks_file, encoding='utf-8') as f:
+            text = f.read()
+    if not text:
+        return []
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as e:
+        raise SystemExit(f'--breaks JSON 을 읽을 수 없습니다: {e}\n'
+                         f'  예: --breaks \'["01:30","03:12","04:50"]\'')
+    if not isinstance(data, list):
+        raise SystemExit('--breaks 는 ["01:30","03:12"] 같은 JSON 배열이어야 합니다')
+    return [parse_timestamp(x) for x in data]
+
 
 def cmd_run(args):
     cfg = load_config(args.config)
@@ -265,7 +304,7 @@ def cmd_run(args):
     explicit = args.workers > 0
     requested = args.workers if explicit else (os.cpu_count() or 1)
     if explicit:
-                                               
+
         workers = max(1, requested)
         advised = safe_workers(requested, vw, vh)
         if workers > advised:
@@ -277,7 +316,7 @@ def cmd_run(args):
             print(f'해상도 {vw}x{vh} 라 워커를 {requested} -> {workers} 개로 정했습니다 '
                   f'(여유 메모리 기준. --workers 로 직접 지정 가능)', file=sys.stderr)
     if workers > 1 and total > 0:
-                                                       
+
         import multiprocessing as mp
         per = ((total // workers) // stride + 1) * stride
         jobs = []
@@ -301,11 +340,16 @@ def cmd_run(args):
                             stride, src_fps, progress, hwaccel=args.hwaccel)
         print('', file=sys.stderr)
 
+    breakpoints = load_breakpoints(args.breaks, args.breaks_file)
+    if breakpoints:
+        pretty = ', '.join(f'{b/60:.0f}:{b%60:05.2f}' for b in breakpoints)
+        print(f'곡 전환 지점 {len(breakpoints)}개 적용: {pretty}', file=sys.stderr)
+
     multi = len(players) > 1
     for pi in range(len(players)):
         per_player = [(t, vs[pi]) for t, vs in samples]
         weak = sum(1 for _, v in per_player if v is None)
-        cleaned = postprocess(per_player, cfg['max_score'])
+        cleaned = postprocess(per_player, cfg['max_score'], breakpoints)
         out_path = player_out_path(args.out, pi, multi)
         out_dir = os.path.dirname(os.path.abspath(out_path))
         if not os.path.isdir(out_dir):
@@ -334,6 +378,14 @@ def cmd_run(args):
             warn = (f'  <-- 주의: 마지막 {secs:.0f}초({tail_none}샘플)가 인식 실패라 '
                     f'최종값이 그 이전에서 멈췄을 수 있습니다')
         print(f'{out_path} 저장 - 샘플 {len(cleaned)}개, 저신뢰 {weak}개, {tail}{warn}')
+
+        if breakpoints:
+            bounds = [0.0] + breakpoints + [float('inf')]
+            for si in range(len(bounds) - 1):
+                lo, hi = bounds[si], bounds[si + 1]
+                seg = [s for t, s in cleaned if lo <= t < hi]
+                if seg:
+                    print(f'    {si + 1}번곡: 최종 {seg[-1]:,}')
     print('최종 점수가 리절트 화면과 다르면 ROI 좌표를 다시 잡으세요.')
 
 def player_out_path(out, pi, multi):
@@ -427,12 +479,23 @@ def cmd_scan(args):
             print(f'  {i + 1}번: 한 번도 성공하지 못했습니다')
     print('\n특정 선수만 일찍 끊긴다면 그 시점을 --at 으로 check 해 보세요.')
 
-def postprocess(samples, max_score):
+def postprocess(samples, max_score, breakpoints=None):
+    """SDVX 점수는 곡 하나 안에서는 단조 증가한다는 제약으로 오인식을 걸러냅니다.
+
+    한 영상에 곡이 여러 개 이어 붙은 경우(예: 1라운드 4곡), breakpoints 로
+    넘긴 시각(초)마다 "여기서부터 새 곡" 으로 보고 단조 증가 기준을 리셋합니다.
+    그 시각이 아닌 곳에서 값이 내려가는 건 여전히 오인식으로 간주해 막습니다.
+    """
     out = []
     last = 0
+    bps = sorted(breakpoints or [])
+    bi = 0
     for t, v in samples:
+        while bi < len(bps) and t >= bps[bi]:
+            last = 0
+            bi += 1
         if v is None or v < last or v > max_score:
-            v = last                              
+            v = last
         last = v
         out.append([round(t, 3), v])
     return out
@@ -464,6 +527,11 @@ def main():
                    help='병렬 프로세스 수 (기본 0 = 자동. 해상도에 맞춰 메모리 한도 안에서 정합니다)')
     r.add_argument('--hwaccel', action='store_true',
                    help='GPU 디코딩 시도. 드라이버 조합에 따라 실패하며 경고만 쏟는 경우가 있어 기본은 꺼져 있습니다')
+    r.add_argument('--breaks', default='',
+                   help='한 영상에 곡이 여러 개 이어진 경우, 곡이 바뀌는 시각들을 JSON 배열로. '
+                        '예: --breaks \'["01:30","03:12","04:50"]\' (mm:ss 또는 초 단위 숫자)')
+    r.add_argument('--breaks-file', default='',
+                   help='--breaks 를 파일로 줄 때. 파일 내용은 위와 같은 JSON 배열')
     r.set_defaults(func=cmd_run)
 
     c = sub.add_parser('check', help='특정 시점의 인식 결과를 자릿수별로 확인')
