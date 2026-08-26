@@ -1,15 +1,15 @@
 {
-  "view": "match",
+  "view": "songs",
   "round": {
-    "kicker": "ARENA BATTLE",
-    "title": "ROUND 1",
-    "sub": "EVOLVE"
+    "kicker": "SINGLE BATTLE",
+    "title": "ROUND 4",
+    "sub": "FREE"
   },
   "teams": {
     "left": {
-      "name": "1111 2222",
+      "name": "이마트빵도둑볼은우",
       "logo": "https://i.imgur.com/pap50yH.jpeg",
-      "score": 0,
+      "score": 2,
       "players": [
         {
           "name": "장박짱",
@@ -22,9 +22,9 @@
       ]
     },
     "right": {
-      "name": "22222 3333",
+      "name": "비순애사랑단",
       "logo": "https://i.imgur.com/aL9xhIQ.png",
-      "score": 0,
+      "score": 2,
       "players": [
         {
           "name": "MindBlow",
@@ -41,46 +41,32 @@
     "left": [
       {
         "title": "物凄いスペースシャトルでこいしが物凄いうた",
-        "jacket": "",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1078_maximum.webp",
         "diff": "MXM",
         "level": "17.5",
         "banned": false
       },
       {
-        "title": "1",
-        "jacket": "",
-        "diff": "EXH",
-        "level": "",
-        "banned": false
-      },
-      {
-        "title": "",
-        "jacket": "",
-        "diff": "EXH",
-        "level": "",
-        "banned": false
+        "title": "Everlasting Message",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F636_ultimate.webp",
+        "diff": "MXM",
+        "level": "20.9",
+        "banned": true
       }
     ],
     "right": [
       {
         "title": "vivid landscape",
-        "jacket": "",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1311_maximum.webp",
         "diff": "MXM",
         "level": "17.5",
-        "banned": false
+        "banned": true
       },
       {
         "title": "PIZZATIME",
-        "jacket": "",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1421_maximum.webp",
         "diff": "MXM",
         "level": "17.5",
-        "banned": false
-      },
-      {
-        "title": "",
-        "jacket": "",
-        "diff": "EXH",
-        "level": "",
         "banned": false
       }
     ]
@@ -97,59 +83,35 @@
         "icon": "",
         "video": "",
         "offsetMs": 0,
-        "timeline": "/tools/match.p1.scores.json",
+        "timeline": "",
         "crop": {
           "x": 0,
           "y": 0,
-          "w": 25,
+          "w": 50,
           "h": 100
         }
       },
       {
         "rank": "1st",
-        "team": "left",
+        "team": "right",
         "player": "2",
         "icon": "",
         "video": "",
         "offsetMs": 0,
-        "timeline": "/tools/match.p2.scores.json",
-        "crop": {
-          "x": 25,
-          "y": 0,
-          "w": 25,
-          "h": 100
-        }
-      },
-      {
-        "rank": "",
-        "team": "right",
-        "player": "3",
+        "timeline": "",
         "crop": {
           "x": 50,
           "y": 0,
-          "w": 25,
+          "w": 50,
           "h": 100
-        },
-        "timeline": "/tools/match.p3.scores.json"
-      },
-      {
-        "rank": "",
-        "team": "right",
-        "player": "4",
-        "crop": {
-          "x": 75,
-          "y": 0,
-          "w": 25,
-          "h": 100
-        },
-        "timeline": "/tools/match.p4.scores.json"
+        }
       }
     ],
-    "autoMeter": true,
-    "maxDiff": 500000,
+    "autoMeter": false,
+    "maxDiff": 150000,
     "labelStyle": "short",
-    "combinedVideo": "/videos/match_new.mp4 ",
-    "autoRank": true,
+    "combinedVideo": "/videos/all4.mp4",
+    "autoRank": false,
     "currentSide": "left",
     "currentSong": 0,
     "badges": {
@@ -163,22 +125,22 @@
     "used": true,
     "pool": [
       {
-        "title": "1",
-        "jacket": "",
-        "diff": "EXH",
-        "level": ""
+        "title": "Sudden Visitor",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1466_maximum.webp",
+        "diff": "MXM",
+        "level": "18.2"
       },
       {
-        "title": "2",
-        "jacket": "",
-        "diff": "EXH",
-        "level": ""
+        "title": "Everlasting Message",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F636_ultimate.webp",
+        "diff": "MXM",
+        "level": "20.9"
       },
       {
-        "title": "3",
-        "jacket": "",
-        "diff": "EXH",
-        "level": ""
+        "title": "Juggler's Maddness",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1106_maximum.webp",
+        "diff": "MXM",
+        "level": "18.6"
       }
     ],
     "active": null,
