@@ -285,6 +285,11 @@
     <span style="color:#A79B8E;font-size:12px">이 차이에서 바가 끝까지 참</span>
     <button id="label-style" style="margin-left:12px">표기: 축약</button>
   </div>
+  <div class="row" style="margin-top:10px">
+    <button id="song-reset">이번 곡 시작점 찍기</button>
+    <button id="song-reset-clear">리셋 해제(영상 전체 누계)</button>
+    <span class="muted" style="font-size:12px" id="song-reset-note"></span>
+  </div>
 </section>
 
 <section>
@@ -301,7 +306,7 @@
 'use strict';
 
 let state = null;
-let editing = false;   
+let editing = false;
 
 const pendingBans = { left: new Map(), right: new Map() };
 
@@ -346,7 +351,7 @@ function renderSongs(side) {
     const banBtn = document.createElement('button');
     banBtn.className = 'ban' + (dirty ? ' pending' : target ? ' on' : '');
     banBtn.textContent = dirty ? (target ? '밴 예정' : '해제 예정') : (target ? 'BANNED' : 'BAN');
-    
+
     const strAct = (state.strategy && state.strategy.active) || null;
     const isStrTarget = !!strAct && strAct.side === side && strAct.index === i;
     if (isStrTarget) {
@@ -356,7 +361,7 @@ function renderSongs(side) {
     banBtn.onclick = () => {
       const cur = pend.has(i) ? pend.get(i) : !!song.banned;
       pend.set(i, !cur);
-      if (pend.get(i) === !!song.banned) pend.delete(i);   
+      if (pend.get(i) === !!song.banned) pend.delete(i);
       renderSongs(side);
       updateBanPending();
     };
@@ -371,7 +376,7 @@ function renderSongs(side) {
       strBtn.disabled = true;
       strBtn.title = '다른 곡에 STRATEGY 진행 중입니다';
     } else if (target) {
-      strBtn.disabled = true;                    
+      strBtn.disabled = true;
       strBtn.title = '밴된 곡에는 STRATEGY 를 쓸 수 없습니다';
     } else if (!(st.pool || []).some((s) => (s.title || '').trim())) {
       strBtn.disabled = true;
@@ -379,10 +384,6 @@ function renderSongs(side) {
     }
     strBtn.onclick = () => {
       if (isStrTarget) {
-        // 이미 진행 중인 곡의 배지를 다시 누르면 "취소" 로 동작합니다.
-        // 예전엔 startStrategy 를 다시 불러 phase 를 aim 으로 되돌렸는데,
-        // 그러면 오버레이 연출(카드)은 사라져도 active 는 그대로 남아
-        // 다른 곡들이 계속 "진행 중" 으로 잠긴 채였습니다.
         if (strAutoCloseTimer) { clearTimeout(strAutoCloseTimer); strAutoCloseTimer = null; }
         state.strategy.active = null;
         patch({ strategy: { active: null } });
@@ -397,7 +398,7 @@ function renderSongs(side) {
     del.textContent = '×';
     del.onclick = () => {
       state.songs[side].splice(i, 1);
-      pendingBans[side].clear();      
+      pendingBans[side].clear();
 
       const act = state.strategy && state.strategy.active;
       if (act && act.side === side) {
@@ -590,6 +591,10 @@ function render() {
   $('autorank-toggle').classList.toggle('on', !!state.match.autoRank);
   $('label-style').textContent = state.match.labelStyle === 'full' ? '표기: 전체' : '표기: 축약';
   $('meter').disabled = !!state.match.autoMeter;
+  const resetAt = state.match.songResetAt;
+  $('song-reset-note').textContent = (Number.isFinite(resetAt) && resetAt >= 0)
+    ? `현재 곡 시작점: ${resetAt.toFixed(1)}초 (그 이후 점수만 미터에 반영 중)`
+    : '리셋 없음 — 영상 전체 누계 표시 중';
 }
 
 document.querySelectorAll('[data-view]').forEach((b) => {
@@ -775,7 +780,7 @@ $('preset-load').onclick = async () => {
     const res = await fetch('/api/presets/' + encodeURIComponent(name));
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
-    
+
     if (data.strategy) data.strategy.active = null;
     await patch(data);
     $('preset-name').value = name;
@@ -818,13 +823,11 @@ function applyFormat(songsPerSide, playersPerTeam, note, hud) {
   const s = state.match.slots || (state.match.slots = []);
   while (s.length > total) s.pop();
   while (s.length < total) s.push({ rank: '', team: 'left', player: '', crop: null });
-  
+
   s.forEach((slot, i) => {
     slot.team = i < playersPerTeam ? 'left' : 'right';
   });
 
-  // R2(메가믹스)만 상단에 게임 HUD 띠를 쓰고, 다른 라운드로 바꾸면 꺼둡니다.
-  // 켤 때는 "상단 25% HUD + 아래 75% 좌우 2분할"을 기본값으로 잡습니다.
   if (hud) {
     s.forEach((slot, i) => {
       slot.crop = { x: (100 / total) * i, y: 25, w: 100 / total, h: 75 };
@@ -946,13 +949,14 @@ document.querySelectorAll('#str-choose button').forEach((btn) => {
     if (choice !== 'reset') {
       const picked = strPool()[choice];
       if (!(picked.title || '').trim()) { alert('그 자리에 후보 곡이 비어 있습니다.'); return; }
-      
+
       state.songs[act.side][act.index] = {
         title: picked.title, jacket: picked.jacket,
-        diff: picked.diff, level: picked.level, banned: false
+        diff: picked.diff, level: picked.level, banned: false,
+        strategyPick: true   // 이 곡이 STRATEGY 로 교체됐음을 곡 데이터 자체에 남김
       };
       pendingBans[act.side].delete(act.index);
-      
+
       state.strategy.replacedSide = act.side;
       state.strategy.replacedIndex = act.index;
     }
@@ -979,7 +983,7 @@ document.querySelectorAll('#str-choose button').forEach((btn) => {
 $('str-replay').onclick = () => cmd({ type: 'replayStrategy' });
 
 $('str-cancel').onclick = () => {
-  
+
   if (strAutoCloseTimer) { clearTimeout(strAutoCloseTimer); strAutoCloseTimer = null; }
   state.strategy.active = null;
   patch({ strategy: { active: null } });
@@ -1075,6 +1079,9 @@ const pushMeter = debounce((v) => patch({ match: { meter: v } }), 80);
 $('meter-label').oninput = debounce(() => patch({ match: { label: $('meter-label').value } }), 250);
 $('meter-toggle').onclick = () => patch({ match: { meterVisible: state.match.meterVisible === false } });
 $('auto-toggle').onclick = () => patch({ match: { autoMeter: !state.match.autoMeter } });
+
+$('song-reset').onclick = () => cmd({ type: 'songReset' });
+$('song-reset-clear').onclick = () => cmd({ type: 'songResetClear' });
 $('autorank-toggle').onclick = () => patch({ match: { autoRank: !state.match.autoRank } });
 $('label-style').onclick = () => patch({
   match: { labelStyle: state.match.labelStyle === 'full' ? 'short' : 'full' }

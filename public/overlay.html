@@ -49,6 +49,9 @@
 html, body {
   width: 100%; height: 100%;
   overflow: hidden;
+  /* 16:9 가 아닌 브라우저 소스 크기일 때 레터박스(여백)가 생기는데,
+     투명이면 그 구간에 OBS 배경(다른 씬 등)이 비쳐 경계가 도드라집니다.
+     캔버스와 같은 색으로 채워 이질감 없이 이어지게 합니다. */
   background: var(--bg-0);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -218,6 +221,23 @@ html, body {
   color: var(--gold); font-size: 25px; font-weight: 700; letter-spacing: .02em;
   z-index: 2;
 }
+/* STRATEGY 로 교체된 곡임을 표시하는 작은 라벨. 원래 선곡이 아니라
+   STRATEGY 로 대체됐다는 걸 시청자가 한눈에 알 수 있게 카드 오른쪽
+   위 코너에 붙입니다. */
+.pick .str-tag {
+  display: none;
+  position: absolute; top: 10px; right: 10px;
+  height: 26px; padding: 0 10px;
+  align-items: center;
+  border-radius: 3px;
+  background: #2A0D0A;
+  border: 1px solid var(--red);
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 700; letter-spacing: .06em;
+  z-index: 3;
+}
+.pick.str-picked .str-tag { display: inline-flex; }
 
 .pick.banned .jacket,
 .pick.banned .meta { filter: grayscale(.6) brightness(.72); }
@@ -487,6 +507,8 @@ html, body {
   border-radius: 4px;
   overflow: visible;
 }
+/* 점수차 0 지점(정중앙) 기준선. 미터가 어느 쪽으로 얼마나 기울었는지
+   한눈에 가늠할 수 있게 고정된 세로선을 하나 그어둡니다. */
 .meter::after {
   content: "";
   position: absolute; left: 50%; top: -6px; bottom: -6px;
@@ -518,7 +540,7 @@ html, body {
   will-change: transform;
 }
 .meter-knob::before {
-  content: ""; position: absolute; top: 26px; bottom: 0;
+  content: ""; position: absolute; top: 34px; bottom: 0;
   width: 3px; background: var(--gold);
 }
 .meter-knob span {
@@ -641,14 +663,12 @@ html, body {
 
   <div class="bg-deco" aria-hidden="true"></div>
 
-  <!-- STRATEGY 후보 3장 패널 (선곡 뷰 위에 겹쳐 뜸) -->
   <div id="str-panel">
     <div class="str-head">STRATEGY<small id="str-sub"></small></div>
     <div class="str-cards" id="str-cards"></div>
     <div class="str-note" id="str-note"></div>
   </div>
 
-  <!-- 선곡 / 밴 공용 뷰 -->
   <section class="view" data-view="songs">
     <header class="topbar">
       <div class="side left">
@@ -751,7 +771,8 @@ function makePick() {
   li.className = 'pick';
   li.innerHTML = '<div class="jacket"></div>'
                + '<div class="meta"><div class="song-title"></div></div>'
-               + '<div class="badge"></div>';
+               + '<div class="badge"></div>'
+               + '<div class="str-tag">STRATEGY</div>';
   return li;
 }
 
@@ -773,6 +794,7 @@ function updatePick(li, song, i, animate) {
   badge.style.color = varName ? '#000' : 'var(--gold)';
 
   li.classList.toggle('banned', !!song.banned);
+  li.classList.toggle('str-picked', !!song.strategyPick);
 
   const wantMark = !!song.banned;
   const mark = li.querySelector('.ban-mark');
@@ -1092,6 +1114,9 @@ function renderCombinedFeeds(slots) {
 
   if (!combinedVideo) {
     combinedVideo = document.createElement('video');
+    // 소리를 켜서 재생합니다. 일반 탭 자동재생 정책 때문에 사용자 클릭
+    // 없이는 재생이 막힐 수 있으니, OBS 브라우저 소스에서는 속성의
+    // "페이지 권한 제어" 를 "고급 접근" 으로 설정해야 정상 재생됩니다.
     combinedVideo.muted = false;
     combinedVideo.playsInline = true;
     combinedVideo.preload = 'auto';
@@ -1148,7 +1173,7 @@ function buildDrawPlan() {
     const dw = Math.max(1, Math.round(rect.width)), dh = Math.max(1, Math.round(rect.height));
     if (canvas.width !== dw || canvas.height !== dh) { canvas.width = dw; canvas.height = dh; }
 
-    const ctx = canvas.getContext('2d', { alpha: false });
+    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
     plan.push({ ctx, sx, sy, sw, sh, dw, dh });
   };
 
@@ -1397,7 +1422,7 @@ function autoTick(now) {
       const base0 = scoreAtSmooth(i, resetAt);
       if (base0 != null) v = Math.max(0, v - base0);
     }
-    values.push(v);
+    values.push(v);   // updateRanks 가 인덱스로 슬롯을 찾으므로 null 이어도 자리는 채움
     if (v == null) continue;
     found = true;
     if (slot.team === 'right') right += v; else left += v;
@@ -1483,6 +1508,9 @@ function handleCmd(cmd) {
       renderStrategy();
       break;
     case 'songReset': {
+      // 통합 영상 안에 곡이 여러 개 이어진 경우(1라운드 4곡 등), 지금
+      // 재생 위치를 "이번 곡 시작점"으로 서버에 저장합니다. autoTick 은
+      // 이 시점 이후로 (현재점수 - 이 시점 점수) 를 미터에 씁니다.
       const master = isCombinedMode() ? combinedVideo : videoEls.get(0);
       const at = master ? master.currentTime : 0;
       fetch('/api/state', {
