@@ -49,9 +49,6 @@
 html, body {
   width: 100%; height: 100%;
   overflow: hidden;
-  /* 16:9 가 아닌 브라우저 소스 크기일 때 레터박스(여백)가 생기는데,
-     투명이면 그 구간에 OBS 배경(다른 씬 등)이 비쳐 경계가 도드라집니다.
-     캔버스와 같은 색으로 채워 이질감 없이 이어지게 합니다. */
   background: var(--bg-0);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -221,9 +218,6 @@ html, body {
   color: var(--gold); font-size: 25px; font-weight: 700; letter-spacing: .02em;
   z-index: 2;
 }
-/* STRATEGY 로 교체된 곡임을 표시하는 작은 라벨. 원래 선곡이 아니라
-   STRATEGY 로 대체됐다는 걸 시청자가 한눈에 알 수 있게 카드 오른쪽
-   위 코너에 붙입니다. */
 .pick .str-tag {
   display: none;
   position: absolute; top: 10px; right: 10px;
@@ -397,14 +391,14 @@ html, body {
 }
 @keyframes str-card-in { from { transform: translateY(40px); opacity: 0; } }
 
-.str-cards.shuffling .str-card {
-  animation: str-shuffle .42s ease-in-out 3;
-}
-@keyframes str-shuffle {
-  0%, 100% { transform: translateX(0) rotate(0deg); }
-  25%      { transform: translateX(-26px) rotate(-4deg); }
-  75%      { transform: translateX(26px) rotate(4deg); }
-}
+/*.str-cards.shuffling .str-card {*/
+/*  animation: str-shuffle .42s ease-in-out 3;*/
+/*}*/
+/*@keyframes str-shuffle {*/
+/*  0%, 100% { transform: translateX(0) rotate(0deg); }*/
+/*  25%      { transform: translateX(-26px) rotate(-4deg); }*/
+/*  75%      { transform: translateX(26px) rotate(4deg); }*/
+/*}*/
 
 .str-card.picked { animation: str-picked .5s cubic-bezier(.2, 1.2, .4, 1) forwards; }
 .str-card.dropped { animation: str-dropped .4s ease forwards; }
@@ -507,8 +501,6 @@ html, body {
   border-radius: 4px;
   overflow: visible;
 }
-/* 점수차 0 지점(정중앙) 기준선. 미터가 어느 쪽으로 얼마나 기울었는지
-   한눈에 가늠할 수 있게 고정된 세로선을 하나 그어둡니다. */
 .meter::after {
   content: "";
   position: absolute; left: 50%; top: -6px; bottom: -6px;
