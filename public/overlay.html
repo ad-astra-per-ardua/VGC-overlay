@@ -1,631 +1,662 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<title>Overlay</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
-<style>
+  <meta charset="utf-8">
+  <title>Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
 
-:root {
-  
-  --bg-0: #000000;
-  --bg-1: #0A0806;
-  --gold: #E9C78C;
-  --gold-dim: #C9A468;
-  --cream: #FAECD3;
-  --card: #14100C;
-  --card-edge: #E9C78C;
-  --brush: #000000;
-  --brush-edge: #E9C78C;
-  --ink: #FAECD3;
-  --blue: #2E6BE0;
-  --red: #D93A2B;
-  --bar-left-dark: #1B47B4;
-  --bar-left-lit: #46A8F0;
-  --bar-right-lit: #F0553C;
-  --bar-right-dark: #B02218;
-  --pill: #3A322A;
+    :root {
 
-  --diff-nov: #5A55C8;
-  --diff-adv: #D8A33C;
-  --diff-exh: #D93A2B;
-  --diff-mxm: #8C8C8C;
-  --diff-inf: #B44FC0;
-  --diff-grv: #D4622A;
-  --diff-hvn: #3F8FD4;
-  --diff-vvd: #D9407A;
-  --diff-xcd: #3A9E8C;
+      --bg-0: #000000;
+      --bg-1: #0A0806;
+      --gold: #E9C78C;
+      --gold-dim: #C9A468;
+      --cream: #FAECD3;
+      --card: #14100C;
+      --card-edge: #E9C78C;
+      --brush: #000000;
+      --brush-edge: #E9C78C;
+      --ink: #FAECD3;
+      --blue: #2E6BE0;
+      --red: #D93A2B;
+      --bar-left-dark: #1B47B4;
+      --bar-left-lit: #46A8F0;
+      --bar-right-lit: #F0553C;
+      --bar-right-dark: #B02218;
+      --pill: #3A322A;
 
-  --font-display: "Josefin Sans", "Pretendard", sans-serif;
-  --font-accent: "Amatic SC", "Josefin Sans", sans-serif;
-  --font-body: "NEXON Lv2 Gothic", "Pretendard", "Noto Sans KR",
-               "Malgun Gothic", "Hiragino Sans", "Yu Gothic UI", system-ui, sans-serif;
-}
+      --diff-nov: #5A55C8;
+      --diff-adv: #D8A33C;
+      --diff-exh: #D93A2B;
+      --diff-mxm: #8C8C8C;
+      --diff-inf: #B44FC0;
+      --diff-grv: #D4622A;
+      --diff-hvn: #3F8FD4;
+      --diff-vvd: #D9407A;
+      --diff-xcd: #3A9E8C;
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+      --font-display: "Josefin Sans", "Pretendard", sans-serif;
+      --font-accent: "Amatic SC", "Josefin Sans", sans-serif;
+      --font-body: "NEXON Lv2 Gothic", "Pretendard", "Noto Sans KR",
+      "Malgun Gothic", "Hiragino Sans", "Yu Gothic UI", system-ui, sans-serif;
+    }
 
-html, body {
-  width: 100%; height: 100%;
-  overflow: hidden;
-  background: var(--bg-0);
-  font-family: var(--font-body);
-  -webkit-font-smoothing: antialiased;
-}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-#stage {
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 1920px; height: 1080px;
-  transform-origin: center center;
-  background:
-    radial-gradient(ellipse 1400px 900px at 50% -10%, rgba(233, 199, 140, 0.10), transparent 60%),
-    linear-gradient(160deg, var(--bg-1) 0%, var(--bg-0) 100%);
-  overflow: hidden;
-}
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      /* 16:9 가 아닌 브라우저 소스 크기일 때 레터박스(여백)가 생기는데,
+         투명이면 그 구간에 OBS 배경(다른 씬 등)이 비쳐 경계가 도드라집니다.
+         캔버스와 같은 색으로 채워 이질감 없이 이어지게 합니다. */
+      background: var(--bg-0);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
 
-.bg-deco {
-  position: absolute; inset: 0;
-  background: url("/assets/bg.png") center / cover no-repeat;
-  pointer-events: none;
-}
+    #stage {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 1920px; height: 1080px;
+      transform-origin: center center;
+      background:
+              radial-gradient(ellipse 1400px 900px at 50% -10%, rgba(233, 199, 140, 0.10), transparent 60%),
+              linear-gradient(160deg, var(--bg-1) 0%, var(--bg-0) 100%);
+      overflow: hidden;
+    }
 
-.view { position: absolute; inset: 0; display: none; }
-.view.active { display: block; }
+    .bg-deco {
+      position: absolute; inset: 0;
+      background: url("/assets/bg.png") center / cover no-repeat;
+      pointer-events: none;
+    }
 
-.topbar {
-  position: absolute; top: 40px; left: 0; right: 0;
-  height: 150px;
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 0 56px;
-}
-.side { display: flex; align-items: center; gap: 22px; }
+    .view { position: absolute; inset: 0; display: none; }
+    .view.active { display: block; }
 
-.team-brush {
-  background: var(--brush);
-  padding: 12px 40px;
-  clip-path: polygon(4% 0%, 96% 0%, 100% 100%, 0% 100%);
-  box-shadow: inset 0 0 0 2px var(--brush-edge);
-  display: flex; align-items: center;
-}
-.team-name {
-  color: var(--gold);
-  font-family: var(--font-display);
-  font-size: 34px; font-weight: 700; letter-spacing: -0.01em;
-  white-space: nowrap;
-}
+    .topbar {
+      position: absolute; top: 40px; left: 0; right: 0;
+      height: 150px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 56px;
+    }
+    .side { display: flex; align-items: center; gap: 22px; }
 
-.team-logo {
-  width: 162px; height: 162px;
-  border: 3px solid var(--gold); border-radius: 4px;
-  background: #0A0806 center / cover no-repeat;
-  flex: none;
-}
-.team-logo.sm { width: 124px; height: 124px; border-width: 3px; }
+    .team-brush {
+      background: var(--brush);
+      padding: 12px 40px;
+      clip-path: polygon(4% 0%, 96% 0%, 100% 100%, 0% 100%);
+      box-shadow: inset 0 0 0 2px var(--brush-edge);
+      display: flex; align-items: center;
+    }
+    .team-name {
+      color: var(--gold);
+      font-family: var(--font-display);
+      font-size: 34px; font-weight: 700; letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
 
-.team-score {
-  color: var(--cream);
-  font-family: var(--font-display);
-  font-size: 62px; font-weight: 700; line-height: 1;
-  min-width: 72px; text-align: center;
-}
+    .team-logo {
+      width: 162px; height: 162px;
+      border: 3px solid var(--gold); border-radius: 4px;
+      background: #0A0806 center / cover no-repeat;
+      flex: none;
+    }
+    .team-logo.sm { width: 124px; height: 124px; border-width: 3px; }
 
-.picks {
-  position: absolute; top: 320px; left: 0; right: 0; bottom: 60px;
-  display: grid; grid-template-columns: 1fr 340px 1fr;
-  gap: 0 24px; padding: 0 60px;
-  align-items: start;
-}
-.pick-col { list-style: none; display: flex; flex-direction: column; gap: 26px; }
+    .team-score {
+      color: var(--cream);
+      font-family: var(--font-display);
+      font-size: 62px; font-weight: 700; line-height: 1;
+      min-width: 72px; text-align: center;
+    }
 
-.picks[data-layout="duo"] .pick-col { gap: 40px; justify-content: center; height: 100%; }
-.picks[data-layout="duo"] .pick { height: 260px; }
-.picks[data-layout="duo"] .pick .jacket { width: 210px; height: 210px; }
-.picks[data-layout="duo"] .pick .song-title { font-size: 46px; }
-.picks[data-layout="duo"] .pick .badge { left: 252px; bottom: 34px; height: 46px; font-size: 28px; }
+    .picks {
+      position: absolute; top: 320px; left: 0; right: 0; bottom: 60px;
+      display: grid; grid-template-columns: 1fr 340px 1fr;
+      gap: 0 24px; padding: 0 60px;
+      align-items: start;
+    }
+    .pick-col { list-style: none; display: flex; flex-direction: column; gap: 26px; }
 
-.picks[data-layout="penta"] {
-  
-  align-items: stretch;
-}
-.picks[data-layout="penta"] .pick-col {
-  position: relative; display: block; gap: 0;
-  height: 100%; min-height: 700px;   
-}
-.picks[data-layout="penta"] .pick {
-  position: absolute;
-  width: 220px; height: 220px;
-  padding: 12px; gap: 8px;
-  flex-direction: column; align-items: center;
-  
-  margin-left: -110px; margin-top: -110px;
-}
-.picks[data-layout="penta"] .pick .jacket { width: 104px; height: 104px; }
-.picks[data-layout="penta"] .pick .meta {
-  padding-top: 0; flex: 1; width: 100%;
-  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-}
-.picks[data-layout="penta"] .pick .song-title {
-  font-size: 18px; line-height: 1.2; text-align: center;
-  -webkit-line-clamp: 2;
-}
+    .picks[data-layout="duo"] .pick-col { gap: 40px; justify-content: center; height: 100%; }
+    .picks[data-layout="duo"] .pick { height: 260px; }
+    .picks[data-layout="duo"] .pick .jacket { width: 210px; height: 210px; }
+    .picks[data-layout="duo"] .pick .song-title { font-size: 46px; }
+    .picks[data-layout="duo"] .pick .badge { left: 252px; bottom: 34px; height: 46px; font-size: 28px; }
 
-.picks[data-layout="penta"] .pick .badge {
-  position: static;
-  left: auto; bottom: auto;
-  align-self: center;
-  margin-top: 6px;
-  height: 24px; padding: 0 10px; font-size: 14px;
-}
-.picks[data-layout="penta"] .pick::after { display: none; }   
+    .picks[data-layout="penta"] {
 
-.picks[data-layout="penta"] .pick:nth-child(1) { left: 50%;   top: 20%; }
-.picks[data-layout="penta"] .pick:nth-child(2) { left: 83.3%; top: 40.7%; }
-.picks[data-layout="penta"] .pick:nth-child(3) { left: 70.6%; top: 74.3%; }
-.picks[data-layout="penta"] .pick:nth-child(4) { left: 29.4%; top: 74.3%; }
-.picks[data-layout="penta"] .pick:nth-child(5) { left: 16.7%; top: 40.7%; }
+      align-items: stretch;
+    }
+    .picks[data-layout="penta"] .pick-col {
+      position: relative; display: block; gap: 0;
+      height: 100%; min-height: 700px;
+    }
+    .picks[data-layout="penta"] .pick {
+      position: absolute;
+      width: 220px; height: 220px;
+      padding: 12px; gap: 8px;
+      flex-direction: column; align-items: center;
 
-.picks[data-layout="penta"] .ban-mark .word { font-size: 26px; padding: 3px 12px; border-width: 1px; }
-.picks[data-layout="penta"] .scope .ring { width: 92px; height: 92px; }
-.picks[data-layout="penta"] .scope .lock { font-size: 17px; padding: 2px 9px; }
+      margin-left: -110px; margin-top: -110px;
+    }
+    .picks[data-layout="penta"] .pick .jacket { width: 104px; height: 104px; }
+    .picks[data-layout="penta"] .pick .meta {
+      padding-top: 0; flex: 1; width: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    }
+    .picks[data-layout="penta"] .pick .song-title {
+      font-size: 18px; line-height: 1.2; text-align: center;
+      -webkit-line-clamp: 2;
+    }
 
-.pick {
-  position: relative;
-  display: flex; align-items: flex-start; gap: 26px;
-  height: 200px; padding: 16px;
-  background: var(--card);
-  border: 2px solid var(--card-edge);
-  border-radius: 8px;
-  overflow: hidden;
-  animation: pick-in .45s cubic-bezier(.2, .8, .3, 1) both;
-  
-  contain: layout style;
-}
-.pick::after {   
-  content: "";
-  position: absolute; right: -30%; top: -60%;
-  width: 70%; height: 220%;
-  background: linear-gradient(100deg, transparent 42%, rgba(233, 199, 140, .10) 50%, transparent 58%);
-  border-radius: 50%;
-  pointer-events: none;
-}
-@keyframes pick-in {
-  from { opacity: 0; transform: translateY(18px) scale(.98); }
-  to   { opacity: 1; transform: none; }
-}
+    .picks[data-layout="penta"] .pick .badge {
+      position: static;
+      left: auto; bottom: auto;
+      align-self: center;
+      margin-top: 6px;
+      height: 24px; padding: 0 10px; font-size: 14px;
+    }
+    .picks[data-layout="penta"] .pick::after { display: none; }
 
-.pick .jacket {
-  width: 160px; height: 160px; flex: none;
-  border: 2px solid var(--gold-dim); border-radius: 4px;
-  background: #1A1512 center / cover no-repeat;
-}
-.pick .meta { flex: 1; min-width: 0; position: relative; z-index: 1; padding-top: 4px; }
-.pick .song-title {
-  color: var(--cream);
-  font-size: 40px; font-weight: 700; line-height: 1.18;
-  letter-spacing: -0.01em;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.pick .badge {
-  position: absolute; left: 202px; bottom: 26px;
-  display: inline-flex; align-items: center;
-  height: 40px; padding: 0 18px;
-  border-radius: 4px;
-  background: var(--pill);
-  border: 1px solid rgba(233, 199, 140, .35);
-  color: var(--gold); font-size: 25px; font-weight: 700; letter-spacing: .02em;
-  z-index: 2;
-}
+    .picks[data-layout="penta"] .pick:nth-child(1) { left: 50%;   top: 20%; }
+    .picks[data-layout="penta"] .pick:nth-child(2) { left: 83.3%; top: 40.7%; }
+    .picks[data-layout="penta"] .pick:nth-child(3) { left: 70.6%; top: 74.3%; }
+    .picks[data-layout="penta"] .pick:nth-child(4) { left: 29.4%; top: 74.3%; }
+    .picks[data-layout="penta"] .pick:nth-child(5) { left: 16.7%; top: 40.7%; }
 
-.pick.banned .jacket,
-.pick.banned .meta { filter: grayscale(.6) brightness(.72); }
+    .picks[data-layout="penta"] .ban-mark .word { font-size: 26px; padding: 3px 12px; border-width: 1px; }
+    .picks[data-layout="penta"] .scope .ring { width: 92px; height: 92px; }
+    .picks[data-layout="penta"] .scope .lock { font-size: 17px; padding: 2px 9px; }
 
-.ban-mark {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  pointer-events: none; z-index: 5;
-  overflow: hidden;
-}
+    .pick {
+      position: relative;
+      display: flex; align-items: flex-start; gap: 26px;
+      height: 200px; padding: 16px;
+      background: var(--card);
+      border: 2px solid var(--card-edge);
+      border-radius: 8px;
+      overflow: hidden;
+      animation: pick-in .45s cubic-bezier(.2, .8, .3, 1) both;
 
-.ban-mark .cut-line {
-  position: absolute; left: 0; right: 0; top: 50%;
-  height: 3px;
-  transform: translateY(-50%) scaleX(0);
-  transform-origin: left center;
-  background: linear-gradient(90deg, var(--red) 0%, var(--red) 92%, #fff 100%);
-  box-shadow: 0 0 14px 1px rgba(217, 58, 43, .55);
-  animation: cut-sweep .22s cubic-bezier(.7, 0, .2, 1) forwards;
-}
-@keyframes cut-sweep {
-  to { transform: translateY(-50%) scaleX(1); }
-}
+      contain: layout style;
+    }
+    .pick::after {
+      content: "";
+      position: absolute; right: -30%; top: -60%;
+      width: 70%; height: 220%;
+      background: linear-gradient(100deg, transparent 42%, rgba(233, 199, 140, .10) 50%, transparent 58%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    @keyframes pick-in {
+      from { opacity: 0; transform: translateY(18px) scale(.98); }
+      to   { opacity: 1; transform: none; }
+    }
 
-.ban-mark .word {
-  position: relative; z-index: 6;
-  display: inline-flex; align-items: center;
-  padding: 6px 22px;
-  background: #0A0806;
-  border: 2px solid var(--red);
-  color: var(--red);
-  font-family: var(--font-display);
-  font-size: 46px; font-weight: 700; letter-spacing: .12em;
-  opacity: 0; transform: scale(.85);
-  animation: ban-word .22s cubic-bezier(.2, 1.1, .4, 1) .22s forwards;
-}
-@keyframes ban-word {
-  to { opacity: 1; transform: scale(1); }
-}
+    .pick .jacket {
+      width: 160px; height: 160px; flex: none;
+      border: 2px solid var(--gold-dim); border-radius: 4px;
+      background: #1A1512 center / cover no-repeat;
+    }
+    .pick .meta { flex: 1; min-width: 0; position: relative; z-index: 1; padding-top: 4px; }
+    .pick .song-title {
+      color: var(--cream);
+      font-size: 40px; font-weight: 700; line-height: 1.18;
+      letter-spacing: -0.01em;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .pick .badge {
+      position: absolute; left: 202px; bottom: 26px;
+      display: inline-flex; align-items: center;
+      height: 40px; padding: 0 18px;
+      border-radius: 4px;
+      background: var(--pill);
+      border: 1px solid rgba(233, 199, 140, .35);
+      color: var(--gold); font-size: 25px; font-weight: 700; letter-spacing: .02em;
+      z-index: 2;
+    }
+    /* STRATEGY 로 교체된 곡임을 표시하는 작은 라벨. 원래 선곡이 아니라
+       STRATEGY 로 대체됐다는 걸 시청자가 한눈에 알 수 있게 카드 오른쪽
+       위 코너에 붙입니다. */
+    .pick .str-tag {
+      display: none;
+      position: absolute; top: 10px; right: 10px;
+      height: 26px; padding: 0 10px;
+      align-items: center;
+      border-radius: 3px;
+      background: #2A0D0A;
+      border: 1px solid var(--red);
+      color: var(--cream);
+      font-family: var(--font-display);
+      font-size: 15px; font-weight: 700; letter-spacing: .06em;
+      z-index: 3;
+    }
+    .pick.str-picked .str-tag { display: inline-flex; }
 
-.pick.str-target {
-  animation: str-target-pulse .5s ease-in-out 3;
-  z-index: 2;
-}
-@keyframes str-target-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 58, 43, 0); }
-  50%      { box-shadow: 0 0 0 3px rgba(217, 58, 43, .85); }
-}
+    .pick.banned .jacket,
+    .pick.banned .meta { filter: grayscale(.6) brightness(.72); }
 
-.scope {
-  position: absolute; inset: 0;
-  pointer-events: none; z-index: 6;
-  display: grid; place-items: center;
-  overflow: hidden;
-}
-.scope .ring {
-  position: absolute;
-  width: 150px; height: 150px;
-  border: 3px solid var(--red);
-  border-radius: 50%;
-  opacity: 0;
-  transform: scale(3.2) rotate(0deg);
-  animation: scope-close .55s cubic-bezier(.5, 0, .2, 1) forwards;
-}
-.scope .ring::after {   
-  content: "";
-  position: absolute; inset: -10px;
-  border-radius: 50%;
-  background:
-    linear-gradient(var(--red), var(--red)) 50% 0   / 2px 12px no-repeat,
-    linear-gradient(var(--red), var(--red)) 50% 100% / 2px 12px no-repeat,
-    linear-gradient(var(--red), var(--red)) 0   50% / 12px 2px no-repeat,
-    linear-gradient(var(--red), var(--red)) 100% 50% / 12px 2px no-repeat;
-}
-@keyframes scope-close {
-  0%   { opacity: 0;   transform: scale(3.2) rotate(-90deg); }
-  35%  { opacity: 1; }
-  100% { opacity: 1;   transform: scale(1) rotate(0deg); }
-}
+    .ban-mark {
+      position: absolute; inset: 0;
+      display: grid; place-items: center;
+      pointer-events: none; z-index: 5;
+      overflow: hidden;
+    }
 
-.scope .cross-h, .scope .cross-v {
-  position: absolute; background: var(--red); opacity: 0;
-}
-.scope .cross-h {
-  left: 0; right: 0; height: 2px;
-  transform: scaleX(0); transform-origin: center;
-  animation: cross-in-h .3s ease-out .42s forwards;
-}
-.scope .cross-v {
-  top: 0; bottom: 0; width: 2px;
-  transform: scaleY(0); transform-origin: center;
-  animation: cross-in-v .3s ease-out .42s forwards;
-}
-@keyframes cross-in-h { to { opacity: .9; transform: scaleX(1); } }
-@keyframes cross-in-v { to { opacity: .9; transform: scaleY(1); } }
+    .ban-mark .cut-line {
+      position: absolute; left: 0; right: 0; top: 50%;
+      height: 3px;
+      transform: translateY(-50%) scaleX(0);
+      transform-origin: left center;
+      background: linear-gradient(90deg, var(--red) 0%, var(--red) 92%, #fff 100%);
+      box-shadow: 0 0 14px 1px rgba(217, 58, 43, .55);
+      animation: cut-sweep .22s cubic-bezier(.7, 0, .2, 1) forwards;
+    }
+    @keyframes cut-sweep {
+      to { transform: translateY(-50%) scaleX(1); }
+    }
 
-.scope .lock {
-  position: relative; z-index: 2;
-  font-family: var(--font-display);
-  font-size: 30px; font-weight: 700; letter-spacing: .18em;
-  color: var(--cream);
-  background: #0A0806; border: 2px solid var(--red);
-  padding: 4px 16px;
-  opacity: 0; transform: scale(.8);
-  animation: lock-in .25s cubic-bezier(.2, 1.3, .4, 1) .62s forwards;
-}
-@keyframes lock-in { to { opacity: 1; transform: scale(1); } }
+    .ban-mark .word {
+      position: relative; z-index: 6;
+      display: inline-flex; align-items: center;
+      padding: 6px 22px;
+      background: #0A0806;
+      border: 2px solid var(--red);
+      color: var(--red);
+      font-family: var(--font-display);
+      font-size: 46px; font-weight: 700; letter-spacing: .12em;
+      opacity: 0; transform: scale(.85);
+      animation: ban-word .22s cubic-bezier(.2, 1.1, .4, 1) .22s forwards;
+    }
+    @keyframes ban-word {
+      to { opacity: 1; transform: scale(1); }
+    }
 
-#str-panel {
-  position: absolute; inset: 0;
-  z-index: 20;
-  display: none;
-  place-items: center;
-  background: rgba(0, 0, 0, .82);
-  animation: str-panel-in .3s ease-out;
-}
-#str-panel.on { display: grid; }
-@keyframes str-panel-in { from { opacity: 0; } to { opacity: 1; } }
+    .pick.str-target {
+      animation: str-target-pulse .5s ease-in-out 3;
+      z-index: 2;
+    }
+    @keyframes str-target-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(217, 58, 43, 0); }
+      50%      { box-shadow: 0 0 0 3px rgba(217, 58, 43, .85); }
+    }
 
-.str-head {
-  position: absolute; top: 130px; left: 0; right: 0;
-  text-align: center;
-  font-family: var(--font-display);
-  color: var(--gold);
-  font-size: 46px; font-weight: 700; letter-spacing: .2em;
-}
-.str-head small {
-  display: block; margin-top: 8px;
-  font-size: 22px; letter-spacing: .1em; color: var(--gold-dim);
-}
+    .scope {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 6;
+      display: grid; place-items: center;
+      overflow: hidden;
+    }
+    .scope .ring {
+      position: absolute;
+      width: 150px; height: 150px;
+      border: 3px solid var(--red);
+      border-radius: 50%;
+      opacity: 0;
+      transform: scale(3.2) rotate(0deg);
+      animation: scope-close .55s cubic-bezier(.5, 0, .2, 1) forwards;
+    }
+    .scope .ring::after {
+      content: "";
+      position: absolute; inset: -10px;
+      border-radius: 50%;
+      background:
+              linear-gradient(var(--red), var(--red)) 50% 0   / 2px 12px no-repeat,
+              linear-gradient(var(--red), var(--red)) 50% 100% / 2px 12px no-repeat,
+              linear-gradient(var(--red), var(--red)) 0   50% / 12px 2px no-repeat,
+              linear-gradient(var(--red), var(--red)) 100% 50% / 12px 2px no-repeat;
+    }
+    @keyframes scope-close {
+      0%   { opacity: 0;   transform: scale(3.2) rotate(-90deg); }
+      35%  { opacity: 1; }
+      100% { opacity: 1;   transform: scale(1) rotate(0deg); }
+    }
 
-.str-cards { display: flex; gap: 34px; }
-.str-card {
-  width: 380px; height: 440px;
-  background: var(--card);
-  border: 2px solid var(--card-edge);
-  border-radius: 10px;
-  padding: 22px;
-  display: flex; flex-direction: column; align-items: center; gap: 18px;
-  
-  opacity: 1; transform: translateY(0);
-  animation: str-card-in .45s cubic-bezier(.2, .9, .3, 1) backwards;
-}
-.str-card .jacket {
-  width: 300px; height: 300px; flex: none;
-  border: 2px solid var(--gold-dim); border-radius: 6px;
-  background: #1A1512 center / cover no-repeat;
-}
-.str-card .t {
-  color: var(--cream); font-size: 26px; font-weight: 700;
-  text-align: center; line-height: 1.2;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.str-card .b {
-  display: inline-flex; align-items: center; height: 34px; padding: 0 14px;
-  border-radius: 4px; font-size: 21px; font-weight: 700;
-}
-@keyframes str-card-in { from { transform: translateY(40px); opacity: 0; } }
+    .scope .cross-h, .scope .cross-v {
+      position: absolute; background: var(--red); opacity: 0;
+    }
+    .scope .cross-h {
+      left: 0; right: 0; height: 2px;
+      transform: scaleX(0); transform-origin: center;
+      animation: cross-in-h .3s ease-out .42s forwards;
+    }
+    .scope .cross-v {
+      top: 0; bottom: 0; width: 2px;
+      transform: scaleY(0); transform-origin: center;
+      animation: cross-in-v .3s ease-out .42s forwards;
+    }
+    @keyframes cross-in-h { to { opacity: .9; transform: scaleX(1); } }
+    @keyframes cross-in-v { to { opacity: .9; transform: scaleY(1); } }
 
-.str-cards.shuffling .str-card {
-  animation: str-shuffle .42s ease-in-out 3;
-}
-@keyframes str-shuffle {
-  0%, 100% { transform: translateX(0) rotate(0deg); }
-  25%      { transform: translateX(-26px) rotate(-4deg); }
-  75%      { transform: translateX(26px) rotate(4deg); }
-}
+    .scope .lock {
+      position: relative; z-index: 2;
+      font-family: var(--font-display);
+      font-size: 30px; font-weight: 700; letter-spacing: .18em;
+      color: var(--cream);
+      background: #0A0806; border: 2px solid var(--red);
+      padding: 4px 16px;
+      opacity: 0; transform: scale(.8);
+      animation: lock-in .25s cubic-bezier(.2, 1.3, .4, 1) .62s forwards;
+    }
+    @keyframes lock-in { to { opacity: 1; transform: scale(1); } }
 
-.str-card.picked { animation: str-picked .5s cubic-bezier(.2, 1.2, .4, 1) forwards; }
-.str-card.dropped { animation: str-dropped .4s ease forwards; }
-@keyframes str-picked {
-  0%   { transform: scale(1); }
-  100% { transform: scale(1.07); border-color: var(--gold); box-shadow: 0 0 0 4px rgba(233,199,140,.5); }
-}
-@keyframes str-dropped { to { opacity: .12; transform: scale(.92); filter: grayscale(1); } }
+    #str-panel {
+      position: absolute; inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      background: rgba(0, 0, 0, .82);
+      animation: str-panel-in .3s ease-out;
+    }
+    #str-panel.on { display: grid; }
+    @keyframes str-panel-in { from { opacity: 0; } to { opacity: 1; } }
 
-.str-note {
-  position: absolute; bottom: 120px; left: 0; right: 0;
-  text-align: center;
-  font-family: var(--font-display);
-  font-size: 30px; font-weight: 700; letter-spacing: .12em;
-  color: var(--gold);
-  opacity: 0;
-}
-.str-note.on { animation: str-note-in .35s ease-out forwards; }
-@keyframes str-note-in { to { opacity: 1; } }
+    .str-head {
+      position: absolute; top: 130px; left: 0; right: 0;
+      text-align: center;
+      font-family: var(--font-display);
+      color: var(--gold);
+      font-size: 46px; font-weight: 700; letter-spacing: .2em;
+    }
+    .str-head small {
+      display: block; margin-top: 8px;
+      font-size: 22px; letter-spacing: .1em; color: var(--gold-dim);
+    }
 
-.emblem {
-  position: relative;
-  align-self: center;
-  display: grid; place-items: center;
-  height: 260px;
-}
-.blossom { width: 260px; height: 260px; }
-.emblem-text {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  color: var(--cream); text-align: center;
-  font-family: var(--font-display);
-}
-.emblem-text .kicker { font-size: 22px; font-weight: 600; letter-spacing: .22em; color: var(--gold-dim); }
-.emblem-text .title  { font-size: 54px; font-weight: 700; letter-spacing: .01em; line-height: 1.05; color: var(--gold); }
-.emblem-text .sub    { font-size: 22px; font-weight: 600; letter-spacing: .26em; color: var(--gold-dim); }
+    .str-cards { display: flex; gap: 34px; }
+    .str-card {
+      width: 380px; height: 440px;
+      background: var(--card);
+      border: 2px solid var(--card-edge);
+      border-radius: 10px;
+      padding: 22px;
+      display: flex; flex-direction: column; align-items: center; gap: 18px;
 
-.matchbar {
-  position: absolute; top: 32px; left: 0; right: 0;
-  height: 132px;
-  display: flex; align-items: center; justify-content: center; gap: 24px;
-  padding: 0 48px;
-}
+      opacity: 1; transform: translateY(0);
+      animation: str-card-in .45s cubic-bezier(.2, .9, .3, 1) backwards;
+    }
+    .str-card .jacket {
+      width: 300px; height: 300px; flex: none;
+      border: 2px solid var(--gold-dim); border-radius: 6px;
+      background: #1A1512 center / cover no-repeat;
+    }
+    .str-card .t {
+      color: var(--cream); font-size: 26px; font-weight: 700;
+      text-align: center; line-height: 1.2;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .str-card .b {
+      display: inline-flex; align-items: center; height: 34px; padding: 0 14px;
+      border-radius: 4px; font-size: 21px; font-weight: 700;
+    }
+    @keyframes str-card-in { from { transform: translateY(40px); opacity: 0; } }
 
-.team-badge {
-  position: absolute; top: 176px;
-  width: 124px;                 
-  height: 52px;
-  display: none; align-items: center; justify-content: center;
-  padding: 0 6px;
-  background: #0A0806;
-  border: 2px solid var(--gold);
-  color: var(--gold);
-  font-family: var(--font-display);
-  font-size: 21px; font-weight: 700; letter-spacing: .04em;
-  white-space: nowrap;
-  z-index: 4;
-}
-.team-badge.on { display: flex; animation: badge-in .3s ease-out; }
-@keyframes badge-in {
-  from { opacity: 0; transform: translateY(-8px); }
-}
+    .str-cards.shuffling .str-card {
+      animation: str-shuffle .42s ease-in-out 3;
+    }
+    @keyframes str-shuffle {
+      0%, 100% { transform: translateX(0) rotate(0deg); }
+      25%      { transform: translateX(-26px) rotate(-4deg); }
+      75%      { transform: translateX(26px) rotate(4deg); }
+    }
 
-.team-badge.str {
-  border-color: var(--red);
-  color: var(--cream);
-  background: #2A0D0A;
-  font-size: 17px; letter-spacing: .02em;
-}
+    .str-card.picked { animation: str-picked .5s cubic-bezier(.2, 1.2, .4, 1) forwards; }
+    .str-card.dropped { animation: str-dropped .4s ease forwards; }
+    @keyframes str-picked {
+      0%   { transform: scale(1); }
+      100% { transform: scale(1.07); border-color: var(--gold); box-shadow: 0 0 0 4px rgba(233,199,140,.5); }
+    }
+    @keyframes str-dropped { to { opacity: .12; transform: scale(.92); filter: grayscale(1); } }
 
-#badge-left, #badge-right { left: 0; }
+    .str-note {
+      position: absolute; bottom: 120px; left: 0; right: 0;
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: 30px; font-weight: 700; letter-spacing: .12em;
+      color: var(--gold);
+      opacity: 0;
+    }
+    .str-note.on { animation: str-note-in .35s ease-out forwards; }
+    @keyframes str-note-in { to { opacity: 1; } }
 
-.hud-banner {
-  display: none;
-  
-  width: 800px; height: 240px;
-  flex: none;
-  border: 2px solid var(--card-edge);
-  border-radius: 4px;
-  background: #000;
-}
-.hud-banner.on { display: block; }
+    .emblem {
+      position: relative;
+      align-self: center;
+      display: grid; place-items: center;
+      height: 260px;
+    }
+    .blossom { width: 260px; height: 260px; }
+    .emblem-text {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--cream); text-align: center;
+      font-family: var(--font-display);
+    }
+    .emblem-text .kicker { font-size: 22px; font-weight: 600; letter-spacing: .22em; color: var(--gold-dim); }
+    .emblem-text .title  { font-size: 54px; font-weight: 700; letter-spacing: .01em; line-height: 1.05; color: var(--gold); }
+    .emblem-text .sub    { font-size: 22px; font-weight: 600; letter-spacing: .26em; color: var(--gold-dim); }
 
-.matchbar.has-hud { height: 260px; }
+    .matchbar {
+      position: absolute; top: 32px; left: 0; right: 0;
+      height: 132px;
+      display: flex; align-items: center; justify-content: center; gap: 24px;
+      padding: 0 48px;
+    }
 
-.pill-score {
-  min-width: 120px; height: 84px;
-  display: grid; place-items: center;
-  background: var(--brush);
-  box-shadow: inset 0 0 0 2px var(--brush-edge);
-  color: var(--gold); font-family: var(--font-display); font-size: 56px; font-weight: 700;
-  clip-path: polygon(4% 12%, 96% 4%, 100% 88%, 2% 96%);
-  padding: 0 18px;
-}
-.meter {
-  position: relative;
-  flex: 1; max-width: 1140px; height: 66px;
-  background: rgba(233, 199, 140, .08);
-  border: 1px solid rgba(233, 199, 140, .25);
-  border-radius: 4px;
-  overflow: visible;
-}
-.meter-fill-left, .meter-fill-right {
-  position: absolute; top: 0; bottom: 0;
-  
-  width: 100%;
-  transition: transform .08s linear;
-  will-change: transform;
-}
-.meter-fill-left  { left: 0;  transform-origin: left center;  transform: scaleX(.5);
-  background: linear-gradient(90deg, var(--bar-left-dark), var(--bar-left-lit)); border-radius: 4px 0 0 4px; }
-.meter-fill-right { right: 0; transform-origin: right center; transform: scaleX(.5);
-  background: linear-gradient(90deg, var(--bar-right-lit), var(--bar-right-dark)); border-radius: 0 4px 4px 0; }
+    .team-badge {
+      position: absolute; top: 176px;
+      width: 124px;
+      height: 52px;
+      display: none; align-items: center; justify-content: center;
+      padding: 0 6px;
+      background: #0A0806;
+      border: 2px solid var(--gold);
+      color: var(--gold);
+      font-family: var(--font-display);
+      font-size: 21px; font-weight: 700; letter-spacing: .04em;
+      white-space: nowrap;
+      z-index: 4;
+    }
+    .team-badge.on { display: flex; animation: badge-in .3s ease-out; }
+    @keyframes badge-in {
+      from { opacity: 0; transform: translateY(-8px); }
+    }
 
-.meter-knob {
-  position: absolute; top: -30px; bottom: -8px;
-  left: 0;
-  width: 0;
-  display: flex; justify-content: center;
-  transition: transform .08s linear;
-  z-index: 3;
-  will-change: transform;
-}
-.meter-knob::before {
-  content: ""; position: absolute; top: 34px; bottom: 0;
-  width: 3px; background: var(--gold);
-}
-.meter-knob span {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 118px; height: 44px; padding: 0 16px;
-  background: var(--brush); color: var(--gold);
-  box-shadow: inset 0 0 0 2px var(--brush-edge);
-  font-family: var(--font-display);
-  font-size: 28px; font-weight: 700; white-space: nowrap;
-  clip-path: polygon(6% 8%, 94% 2%, 100% 78%, 50% 100%, 0 76%);
-}
-.meter-knob span:empty { display: none; }
+    .team-badge.str {
+      border-color: var(--red);
+      color: var(--cream);
+      background: #2A0D0A;
+      font-size: 17px; letter-spacing: .02em;
+    }
 
-.meter-knob span { transition: background-color .3s ease, color .3s ease; }
-.meter-knob.lead-left  span { background: var(--bar-left-dark); color: #fff; box-shadow: none; }
-.meter-knob.lead-right span { background: var(--bar-right-dark); color: #fff; box-shadow: none; }
+    #badge-left, #badge-right { left: 0; }
 
-.meter-knob.flip span { animation: lead-flip .5s cubic-bezier(.2, 1.4, .4, 1); }
-@keyframes lead-flip {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.28); }
-  100% { transform: scale(1); }
-}
+    .hud-banner {
+      display: none;
 
-.feeds {
-  position: absolute; top: 244px; left: 28px; right: 28px; bottom: 40px;
-  display: grid; gap: 12px;
-  
-  grid-template-columns: repeat(var(--feed-cols, 4), 1fr);
-}
+      width: 800px; height: 240px;
+      flex: none;
+      border: 2px solid var(--card-edge);
+      border-radius: 4px;
+      background: #000;
+    }
+    .hud-banner.on { display: block; }
 
-.feeds.has-hud {
-  grid-template-columns: repeat(2, 366px);
-  justify-content: center;
-  gap: 12px;
-}
-.feeds.has-hud .feed .frame {
-  height: 540px; flex: none;
-}
+    .matchbar.has-hud { height: 260px; }
 
-.feeds[data-cols="2"]:not(.has-hud) {
-  grid-template-columns: repeat(2, 457px);
-  justify-content: center;
-  gap: 28px;
-}
-.feeds[data-cols="2"]:not(.has-hud) .feed .frame {
-  flex: 1;
-}
-.feed { position: relative; display: flex; flex-direction: column; contain: layout style; }
-.feed .rank {
-  height: 56px; margin: 0 6px;
-  display: grid; place-items: center;
-  background: var(--brush);
-  box-shadow: inset 0 0 0 2px var(--brush-edge);
-  color: var(--gold); font-family: var(--font-display);
-  font-size: 40px; font-weight: 700; letter-spacing: .02em;
-  clip-path: polygon(3% 10%, 97% 2%, 100% 92%, 1% 100%);
-}
+    .pill-score {
+      min-width: 120px; height: 84px;
+      display: grid; place-items: center;
+      background: var(--brush);
+      box-shadow: inset 0 0 0 2px var(--brush-edge);
+      color: var(--gold); font-family: var(--font-display); font-size: 56px; font-weight: 700;
+      clip-path: polygon(4% 12%, 96% 4%, 100% 88%, 2% 96%);
+      padding: 0 18px;
+    }
+    .meter {
+      position: relative;
+      flex: 1; max-width: 1140px; height: 66px;
+      background: rgba(233, 199, 140, .08);
+      border: 1px solid rgba(233, 199, 140, .25);
+      border-radius: 4px;
+      overflow: visible;
+    }
+    /* 점수차 0 지점(정중앙) 기준선. 미터가 어느 쪽으로 얼마나 기울었는지
+       한눈에 가늠할 수 있게 고정된 세로선을 하나 그어둡니다. */
+    .meter::after {
+      content: "";
+      position: absolute; left: 50%; top: -6px; bottom: -6px;
+      width: 2px; margin-left: -1px;
+      background: rgba(233, 199, 140, .9);
+      box-shadow: 0 0 4px rgba(233, 199, 140, .6);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .meter-fill-left, .meter-fill-right {
+      position: absolute; top: 0; bottom: 0;
 
-.feed .rank.bump { animation: rank-bump .45s cubic-bezier(.2, 1.4, .4, 1); }
-@keyframes rank-bump {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.22); }
-  100% { transform: scale(1); }
-}
-.feed .frame {
-  position: relative; flex: 1;
-  border: 3px solid var(--card-edge);
-  border-radius: 4px;
-  background: #000;
-  overflow: hidden;
-}
-.feed video, .feed .placeholder {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
-}
-.feed .placeholder {
-  display: grid; place-items: center;
-  color: rgba(233, 199, 140, .3);
-  font-family: var(--font-display);
-  font-size: 22px; font-weight: 600; letter-spacing: .1em;
-  background: repeating-linear-gradient(45deg, #0A0806 0 14px, #120E09 14px 28px);
-}
+      width: 100%;
+      transition: transform .5s cubic-bezier(.25, .1, .25, 1);
+      will-change: transform;
+    }
+    .meter-fill-left  { left: 0;  transform-origin: left center;  transform: scaleX(.5);
+      background: linear-gradient(90deg, var(--bar-left-dark), var(--bar-left-lit)); border-radius: 4px 0 0 4px; }
+    .meter-fill-right { right: 0; transform-origin: right center; transform: scaleX(.5);
+      background: linear-gradient(90deg, var(--bar-right-lit), var(--bar-right-dark)); border-radius: 0 4px 4px 0; }
 
-.feed .plate {
-  height: 82px; flex: none;
-  display: flex; align-items: center; gap: 14px;
-  padding-left: 8px;
-  z-index: 2;
-}
-.feed .plate .avatar {
-  width: 66px; height: 66px; flex: none;
-  border-radius: 50%; border: 2px solid var(--gold);
-  background: #1A1512 center / cover no-repeat;
-}
-.feed .plate .brush {
-  flex: 1; min-width: 0; height: 58px;
-  display: flex; align-items: center;
-  padding: 0 18px;
-  background: var(--brush);
-  box-shadow: inset 0 0 0 1px rgba(233, 199, 140, .3);
-  clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%);
-}
-.feed .plate .brush span {
-  color: var(--cream); font-size: 30px; font-weight: 600;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.feed[data-team="left"]  .plate .brush { box-shadow: inset 0 0 0 1px var(--bar-left-lit); }
-.feed[data-team="right"] .plate .brush { box-shadow: inset 0 0 0 1px var(--bar-right-lit); }
+    .meter-knob {
+      position: absolute; top: -30px; bottom: -8px;
+      left: 0;
+      width: 0;
+      display: flex; justify-content: center;
+      transition: transform .5s cubic-bezier(.25, .1, .25, 1);
+      z-index: 3;
+      will-change: transform;
+    }
+    .meter-knob::before {
+      content: ""; position: absolute; top: 34px; bottom: 0;
+      width: 3px; background: var(--gold);
+    }
+    .meter-knob span {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 118px; height: 44px; padding: 0 16px;
+      background: var(--brush); color: var(--gold);
+      box-shadow: inset 0 0 0 2px var(--brush-edge);
+      font-family: var(--font-display);
+      font-size: 28px; font-weight: 700; white-space: nowrap;
+      clip-path: polygon(6% 8%, 94% 2%, 100% 78%, 50% 100%, 0 76%);
+    }
+    .meter-knob span:empty { display: none; }
 
-@media (prefers-reduced-motion: reduce) {
-  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-}
+    .meter-knob span { transition: background-color .3s ease, color .3s ease; }
+    .meter-knob.lead-left  span { background: var(--bar-left-dark); color: #fff; box-shadow: none; }
+    .meter-knob.lead-right span { background: var(--bar-right-dark); color: #fff; box-shadow: none; }
 
-</style>
+    .meter-knob.flip span { animation: lead-flip .5s cubic-bezier(.2, 1.4, .4, 1); }
+    @keyframes lead-flip {
+      0%   { transform: scale(1); }
+      35%  { transform: scale(1.28); }
+      100% { transform: scale(1); }
+    }
+
+    .feeds {
+      position: absolute; top: 244px; left: 28px; right: 28px; bottom: 40px;
+      display: grid; gap: 12px;
+
+      grid-template-columns: repeat(var(--feed-cols, 4), 1fr);
+    }
+
+    .feeds.has-hud {
+      grid-template-columns: repeat(2, 366px);
+      justify-content: center;
+      gap: 12px;
+    }
+    .feeds.has-hud .feed .frame {
+      height: 540px; flex: none;
+    }
+
+    .feeds[data-cols="2"]:not(.has-hud) {
+      grid-template-columns: repeat(2, 457px);
+      justify-content: center;
+      gap: 28px;
+    }
+    .feeds[data-cols="2"]:not(.has-hud) .feed .frame {
+      flex: 1;
+    }
+    .feed { position: relative; display: flex; flex-direction: column; contain: layout style; }
+    .feed .rank {
+      height: 56px; margin: 0 6px;
+      display: grid; place-items: center;
+      background: var(--brush);
+      box-shadow: inset 0 0 0 2px var(--brush-edge);
+      color: var(--gold); font-family: var(--font-display);
+      font-size: 40px; font-weight: 700; letter-spacing: .02em;
+      clip-path: polygon(3% 10%, 97% 2%, 100% 92%, 1% 100%);
+    }
+
+    .feed .rank.bump { animation: rank-bump .45s cubic-bezier(.2, 1.4, .4, 1); }
+    @keyframes rank-bump {
+      0%   { transform: scale(1); }
+      35%  { transform: scale(1.22); }
+      100% { transform: scale(1); }
+    }
+    .feed .frame {
+      position: relative; flex: 1;
+      border: 3px solid var(--card-edge);
+      border-radius: 4px;
+      background: #000;
+      overflow: hidden;
+    }
+    .feed video, .feed .placeholder {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .feed .placeholder {
+      display: grid; place-items: center;
+      color: rgba(233, 199, 140, .3);
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 600; letter-spacing: .1em;
+      background: repeating-linear-gradient(45deg, #0A0806 0 14px, #120E09 14px 28px);
+    }
+
+    .feed .plate {
+      height: 82px; flex: none;
+      display: flex; align-items: center; gap: 14px;
+      padding-left: 8px;
+      z-index: 2;
+    }
+    .feed .plate .avatar {
+      width: 66px; height: 66px; flex: none;
+      border-radius: 50%; border: 2px solid var(--gold);
+      background: #1A1512 center / cover no-repeat;
+    }
+    .feed .plate .brush {
+      flex: 1; min-width: 0; height: 58px;
+      display: flex; align-items: center;
+      padding: 0 18px;
+      background: var(--brush);
+      box-shadow: inset 0 0 0 1px rgba(233, 199, 140, .3);
+      clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%);
+    }
+    .feed .plate .brush span {
+      color: var(--cream); font-size: 30px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .feed[data-team="left"]  .plate .brush { box-shadow: inset 0 0 0 1px var(--bar-left-lit); }
+    .feed[data-team="right"] .plate .brush { box-shadow: inset 0 0 0 1px var(--bar-right-lit); }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+
+  </style>
 </head>
 <body>
 <div id="stage">
@@ -703,782 +734,823 @@ html, body {
 
 </div>
 <script>
-'use strict';
+  'use strict';
 
-const stage = document.getElementById('stage');
-let state = null;
+  const stage = document.getElementById('stage');
+  let state = null;
 
-function fit() {
-  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
-  stage.style.transform = `translate(-50%, -50%) scale(${s})`;
-}
-addEventListener('resize', fit);
-fit();
-
-const normView = (v) => (v === 'select' || v === 'ban') ? 'songs' : (v || 'songs');
-
-const get = (obj, dotPath) => dotPath.split('.').reduce((a, k) => (a == null ? a : a[k]), obj);
-
-const DIFF_VAR = {
-  NOV: '--diff-nov', ADV: '--diff-adv', EXH: '--diff-exh', MXM: '--diff-mxm',
-  INF: '--diff-inf', GRV: '--diff-grv', HVN: '--diff-hvn', VVD: '--diff-vvd', XCD: '--diff-xcd'
-};
-
-function applyBindings() {
-  document.querySelectorAll('[data-bind]').forEach((el) => {
-    const v = get(state, el.dataset.bind);
-    el.textContent = v == null ? '' : String(v);
-  });
-  document.querySelectorAll('[data-bind-bg]').forEach((el) => {
-    const v = get(state, el.dataset.bindBg);
-    el.style.backgroundImage = v ? `url("${v}")` : '';
-  });
-}
-
-const pickCache = { left: '', right: '' };
-
-function makePick() {
-  const li = document.createElement('li');
-  li.className = 'pick';
-  li.innerHTML = '<div class="jacket"></div>'
-               + '<div class="meta"><div class="song-title"></div></div>'
-               + '<div class="badge"></div>';
-  return li;
-}
-
-function updatePick(li, song, i, animate) {
-  const jacket = li.querySelector('.jacket');
-  const bg = song.jacket ? `url("${song.jacket}")` : '';
-  if (jacket.style.backgroundImage !== bg) jacket.style.backgroundImage = bg;
-
-  const title = li.querySelector('.song-title');
-  const titleText = song.title || '';
-  if (title.textContent !== titleText) title.textContent = titleText;
-
-  const badge = li.querySelector('.badge');
-  const badgeText = `${song.diff || ''} ${song.level || ''}`.trim();
-  if (badge.textContent !== badgeText) badge.textContent = badgeText;
-  const varName = DIFF_VAR[(song.diff || '').toUpperCase()];
-  badge.style.background = varName ? `var(${varName})` : '';
-  
-  badge.style.color = varName ? '#000' : 'var(--gold)';
-
-  li.classList.toggle('banned', !!song.banned);
-
-  const wantMark = !!song.banned;
-  const mark = li.querySelector('.ban-mark');
-  if (wantMark && !mark) {
-    const el = document.createElement('div');
-    el.className = 'ban-mark';
-    el.innerHTML = '<div class="cut-line"></div><div class="word">BANNED</div>';
-    li.appendChild(el);
-  } else if (!wantMark && mark) {
-    mark.remove();
+  function fit() {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `translate(-50%, -50%) scale(${s})`;
   }
+  addEventListener('resize', fit);
+  fit();
 
-  if (animate) {
-    li.style.animation = 'none';
-    void li.offsetWidth;          
-    li.style.animation = '';
-    li.style.animationDelay = `${i * 0.09}s`;
-  }
-}
+  const normView = (v) => (v === 'select' || v === 'ban') ? 'songs' : (v || 'songs');
 
-let strSig = '';
+  const get = (obj, dotPath) => dotPath.split('.').reduce((a, k) => (a == null ? a : a[k]), obj);
 
-function renderStrategy() {
-  const st = state.strategy || {};
-  const act = st.active;
-  const panel = document.getElementById('str-panel');
-
-  document.querySelectorAll('.pick.str-target').forEach((el) => {
-    el.classList.remove('str-target');
-    const s = el.querySelector('.scope');
-    if (s) s.remove();
-  });
-
-  if (!act) {
-    panel.classList.remove('on');
-    strSig = '';
-    return;
-  }
-
-  const sig = `${act.side}|${act.index}|${act.phase}|${act.choice}`;
-  const changed = sig !== strSig;
-  strSig = sig;
-
-  if (act.phase === 'aim') {
-    panel.classList.remove('on');
-    const ul = document.getElementById(`picks-${act.side}`);
-    const li = ul && ul.children[act.index];
-    if (li && changed) {
-      li.classList.add('str-target');
-      const sc = document.createElement('div');
-      sc.className = 'scope';
-      sc.innerHTML = '<div class="ring"></div><div class="cross-h"></div>' +
-                     '<div class="cross-v"></div><div class="lock">STRATEGY</div>';
-      li.appendChild(sc);
-    } else if (li) {
-      li.classList.add('str-target');
-    }
-    return;
-  }
-
-  panel.classList.add('on');
-  const target = asArray(state.songs && state.songs[act.side])[act.index] || {};
-  document.getElementById('str-sub').textContent =
-    target.title ? `대체 대상 — ${target.title}` : '';
-
-  const wrap = document.getElementById('str-cards');
-  const pool = asArray(st.pool);
-  if (changed || wrap.children.length !== pool.length) {
-    wrap.innerHTML = '';
-    pool.forEach((song, i) => {
-      const c = document.createElement('div');
-      c.className = 'str-card';
-      c.style.animationDelay = `${i * 0.1}s`;
-      const varName = DIFF_VAR[(song.diff || '').toUpperCase()];
-      c.innerHTML =
-        `<div class="jacket"${song.jacket ? ` style="background-image:url('${song.jacket}')"` : ''}></div>` +
-        `<div class="t">${escapeHtml(song.title || '')}</div>` +
-        `<div class="b" style="background:${varName ? `var(${varName})` : 'var(--pill)'};` +
-        `color:${varName ? '#000' : 'var(--gold)'}">` +
-        `${escapeHtml(`${song.diff || ''} ${song.level || ''}`.trim())}</div>`;
-      wrap.appendChild(c);
-    });
-  }
-
-  const note = document.getElementById('str-note');
-  if (act.phase === 'cards') {
-    
-    if (changed) {
-      wrap.classList.remove('shuffling');
-      void wrap.offsetWidth;
-      setTimeout(() => wrap.classList.add('shuffling'), 380);
-    }
-    note.className = 'str-note';
-    note.textContent = '';
-  } else if (act.phase === 'result') {
-    wrap.classList.remove('shuffling');
-    [...wrap.children].forEach((c, i) => {
-      c.classList.remove('picked', 'dropped');
-      if (act.choice === 'reset') c.classList.add('dropped');
-      else if (i === act.choice) c.classList.add('picked');
-      else c.classList.add('dropped');
-    });
-    note.textContent = act.choice === 'reset' ? '원곡 유지' : '선곡 대체';
-    note.className = 'str-note on';
-  }
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-function asArray(v) { return Array.isArray(v) ? v : []; }
-
-function renderPicks(animate) {
-  
-  const maxLen = Math.max(
-    asArray(state.songs && state.songs.left).length,
-    asArray(state.songs && state.songs.right).length
-  );
-  const layout = maxLen === 2 ? 'duo' : maxLen === 5 ? 'penta' : 'trio';
-  const picksEl = document.querySelector('.picks');
-  if (picksEl && picksEl.dataset.layout !== layout) picksEl.dataset.layout = layout;
-
-  ['left', 'right'].forEach((side) => {
-    const ul = document.getElementById(`picks-${side}`);
-    const songs = asArray(state.songs && state.songs[side]);
-    const sig = JSON.stringify(songs);
-    if (!animate && pickCache[side] === sig) return;   
-    pickCache[side] = sig;
-
-    while (ul.children.length > songs.length) ul.lastElementChild.remove();
-    while (ul.children.length < songs.length) ul.appendChild(makePick());
-
-    songs.forEach((song, i) => updatePick(ul.children[i], song, i, animate));
-  });
-}
-
-const videoEls = new Map();     
-const timelines = new Map();    
-const timelineSrc = new Map();
-
-let combinedVideo = null;       
-let combinedSrc = '';
-let combinedRAF = null;
-const canvasEls = new Map();    
-
-function isCombinedMode() {
-  return !!(state && state.match && state.match.combinedVideo);
-}
-
-const cursor = new Int32Array(32);
-
-const timelineStatus = {};
-let statusPushTimer = null;
-
-function reportTimelineStatus(i, state_, detail) {
-  timelineStatus[i] = { state: state_, detail: detail || '' };
-  clearTimeout(statusPushTimer);
-  statusPushTimer = setTimeout(() => {
-    fetch('/api/diag', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ timelines: timelineStatus })
-    }).catch(() => {});
-  }, 200);
-}
-
-async function loadTimeline(i, url) {
-  if (timelineSrc.get(i) === url) return;
-  timelineSrc.set(i, url);
-  timelines.delete(i);
-  if (i < cursor.length) cursor[i] = 0;   
-  if (!url) { reportTimelineStatus(i, 'empty'); return; }
-  try {
-    const res = await fetch(url);
-    
-    if (!res.ok) throw new Error(`HTTP ${res.status} — 파일을 찾을 수 없습니다`);
-    const json = await res.json();
-    const pts = json.points || [];
-    if (!Array.isArray(pts) || !pts.length) throw new Error('points 가 비어 있습니다');
-    timelines.set(i, {
-      t: Float64Array.from(pts, (p) => p[0]),
-      s: Float64Array.from(pts, (p) => p[1])
-    });
-    const last = pts[pts.length - 1];
-    reportTimelineStatus(i, 'ok', `${pts.length}샘플 / 최종 ${Number(last[1]).toLocaleString('en-US')}`);
-  } catch (e) {
-    console.warn('타임라인 로드 실패:', url, e);
-    reportTimelineStatus(i, 'error', e.message);
-  }
-}
-
-function scoreAt(i, time) {
-  const tl = timelines.get(i);
-  if (!tl || !tl.t.length) return null;
-  if (time <= tl.t[0]) return tl.s[0];
-  let lo = 0, hi = tl.t.length - 1;
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1;
-    if (tl.t[mid] <= time) lo = mid; else hi = mid - 1;
-  }
-  return tl.s[lo];
-}
-
-function scoreAtSmooth(i, time) {
-  const tl = timelines.get(i);
-  if (!tl || !tl.t.length) return null;
-  const t = tl.t, s = tl.s, n = t.length;
-
-  if (time <= t[0]) return s[0];
-  if (time >= t[n - 1]) return s[n - 1];
-
-  let lo = i < cursor.length ? cursor[i] : 0;
-  if (lo >= n - 1 || t[lo] > time) lo = 0;          
-  while (lo < n - 2 && t[lo + 1] <= time) lo++;     
-  if (i < cursor.length) cursor[i] = lo;
-
-  const t0 = t[lo], t1 = t[lo + 1];
-  const span = t1 - t0;
-  if (span <= 0) return s[lo];
-  return s[lo] + (s[lo + 1] - s[lo]) * ((time - t0) / span);
-}
-
-function renderFeeds() {
-  const wrap = document.getElementById('feeds');
-  const slots = asArray(state.match && state.match.slots);
-  const combined = isCombinedMode();
-
-  const cols = String(slots.length || 4);
-  if (wrap.dataset.cols !== cols) {
-    wrap.dataset.cols = cols;
-    wrap.style.setProperty('--feed-cols', cols);
-  }
-
-  if (wrap.children.length !== slots.length || wrap.dataset.mode !== (combined ? 'combined' : 'split')) {
-    wrap.innerHTML = '';
-    wrap.dataset.mode = combined ? 'combined' : 'split';
-    videoEls.forEach((v) => v.remove()); videoEls.clear();
-    canvasEls.clear();
-
-    [...timelines.keys()].forEach((k) => { if (k >= slots.length) timelines.delete(k); });
-    [...timelineSrc.keys()].forEach((k) => { if (k >= slots.length) timelineSrc.delete(k); });
-    for (let k = slots.length; k < cursor.length; k++) cursor[k] = 0;
-    if (combinedVideo) { combinedVideo.remove(); combinedVideo = null; combinedSrc = ''; }
-    if (combinedRAF) { cancelAnimationFrame(combinedRAF); combinedRAF = null; }
-
-    slots.forEach(() => {
-      const feed = document.createElement('div');
-      feed.className = 'feed';
-      feed.innerHTML =
-        '<div class="rank"></div>' +
-        '<div class="frame"><div class="placeholder">NO SIGNAL</div></div>' +
-        '<div class="plate"><div class="avatar"></div><div class="brush"><span></span></div></div>';
-      wrap.appendChild(feed);
-    });
-  }
-
-  slots.forEach((slot, i) => {
-    const feed = wrap.children[i];
-    loadTimeline(i, slot.timeline || '');
-
-    if (feed.dataset.team !== (slot.team || '')) feed.dataset.team = slot.team || '';
-    const rankEl = feed.querySelector('.rank');
-
-    if (!state.match.autoRank) {
-      if (rankEl.textContent !== (slot.rank || '')) rankEl.textContent = slot.rank || '';
-      lastRankText[i] = null;   
-    }
-    const nameEl = feed.querySelector('.plate .brush span');
-    if (nameEl.textContent !== (slot.player || '')) nameEl.textContent = slot.player || '';
-    const avatarEl = feed.querySelector('.plate .avatar');
-    const bg = slot.icon ? `url("${slot.icon}")` : '';
-    if (avatarEl.dataset.bg !== bg) { avatarEl.dataset.bg = bg; avatarEl.style.backgroundImage = bg; }
-  });
-
-  if (combined) renderCombinedFeeds(slots);
-  else renderSplitFeeds(slots);
-}
-
-function renderSplitFeeds(slots) {
-  const wrap = document.getElementById('feeds');
-  slots.forEach((slot, i) => {
-    const feed = wrap.children[i];
-    const frame = feed.querySelector('.frame');
-    const placeholder = frame.querySelector('.placeholder');
-    let video = videoEls.get(i);
-
-    if (slot.video) {
-      if (!video) {
-        video = document.createElement('video');
-        video.muted = true;               
-        video.playsInline = true;
-        video.preload = 'auto';
-        frame.insertBefore(video, placeholder.nextSibling);
-        videoEls.set(i, video);
-      }
-      if (video.dataset.src !== slot.video) {
-        video.dataset.src = slot.video;
-        video.src = slot.video;
-        video.load();
-      }
-      placeholder.style.display = 'none';
-    } else {
-      if (video) { video.remove(); videoEls.delete(i); }
-      placeholder.style.display = '';
-    }
-  });
-}
-
-function renderCombinedFeeds(slots) {
-  const wrap = document.getElementById('feeds');
-  const src = state.match.combinedVideo;
-
-  invalidateDrawPlan();
-  lastDrawnTime = -1;   
-
-  if (!combinedVideo) {
-    combinedVideo = document.createElement('video');
-    combinedVideo.muted = false;
-    combinedVideo.playsInline = true;
-    combinedVideo.preload = 'auto';
-    combinedVideo.style.cssText = 'position:fixed; left:-9999px; top:-9999px; width:1px; height:1px;';
-    document.body.appendChild(combinedVideo);
-  }
-  if (combinedSrc !== src) {
-    combinedSrc = src;
-    combinedVideo.src = src;
-    combinedVideo.load();
-  }
-
-  slots.forEach((slot, i) => {
-    const feed = wrap.children[i];
-    const frame = feed.querySelector('.frame');
-    const placeholder = frame.querySelector('.placeholder');
-    let canvas = canvasEls.get(i);
-
-    if (src && slot.crop) {
-      if (!canvas) {
-        canvas = document.createElement('canvas');
-        canvas.style.cssText = 'position:absolute; inset:0; width:100%; height:100%;';
-        frame.insertBefore(canvas, placeholder.nextSibling);
-        canvasEls.set(i, canvas);
-      }
-      placeholder.style.display = 'none';
-    } else {
-      if (canvas) { canvas.remove(); canvasEls.delete(i); }
-      placeholder.style.display = '';
-    }
-  });
-
-  if (!combinedRAF) drawCombinedFrame();
-}
-
-let drawPlan = null;
-let lastDrawnTime = -1;
-
-function invalidateDrawPlan() { drawPlan = null; }
-addEventListener('resize', invalidateDrawPlan);
-
-function buildDrawPlan() {
-  const vw = combinedVideo.videoWidth, vh = combinedVideo.videoHeight;
-  const slots = asArray(state.match && state.match.slots);
-  const plan = [];
-
-  const add = (canvas, c) => {
-    if (!canvas || !c) return;
-    const sx = Math.round((c.x / 100) * vw), sy = Math.round((c.y / 100) * vh);
-    const sw = Math.round((c.w / 100) * vw), sh = Math.round((c.h / 100) * vh);
-    if (sw <= 0 || sh <= 0) return;
-
-    const rect = canvas.getBoundingClientRect();   
-    const dw = Math.max(1, Math.round(rect.width)), dh = Math.max(1, Math.round(rect.height));
-    if (canvas.width !== dw || canvas.height !== dh) { canvas.width = dw; canvas.height = dh; }
-
-    const ctx = canvas.getContext('2d', { alpha: false });
-    plan.push({ ctx, sx, sy, sw, sh, dw, dh });
+  const DIFF_VAR = {
+    NOV: '--diff-nov', ADV: '--diff-adv', EXH: '--diff-exh', MXM: '--diff-mxm',
+    INF: '--diff-inf', GRV: '--diff-grv', HVN: '--diff-hvn', VVD: '--diff-vvd', XCD: '--diff-xcd'
   };
 
-  const hud = state.match && state.match.hudCrop;
-  const hudEl = document.getElementById('hud-banner');
-  if (hud && hudEl && hudEl.classList.contains('on')) add(hudEl, hud);
-
-  slots.forEach((slot, i) => add(canvasEls.get(i), slot.crop));
-  return plan;
-}
-
-function drawCombinedFrame() {
-  combinedRAF = requestAnimationFrame(drawCombinedFrame);
-  if (!isCombinedMode() || !combinedVideo || !combinedVideo.videoWidth) return;
-
-  const t = combinedVideo.currentTime;
-  if (t === lastDrawnTime) return;
-  lastDrawnTime = t;
-
-  if (!drawPlan) drawPlan = buildDrawPlan();
-  for (let i = 0; i < drawPlan.length; i++) {
-    const p = drawPlan[i];
-    p.ctx.drawImage(combinedVideo, p.sx, p.sy, p.sw, p.sh, 0, 0, p.dw, p.dh);
+  function applyBindings() {
+    document.querySelectorAll('[data-bind]').forEach((el) => {
+      const v = get(state, el.dataset.bind);
+      el.textContent = v == null ? '' : String(v);
+    });
+    document.querySelectorAll('[data-bind-bg]').forEach((el) => {
+      const v = get(state, el.dataset.bindBg);
+      el.style.backgroundImage = v ? `url("${v}")` : '';
+    });
   }
-}
 
-function formatDiff(n) {
-  const a = Math.abs(Math.round(n));
-  if (a < 1000) return String(a);
-  if (a < 999500) {              
-    const v = a / 1000;
-    return trimZeros(v < 100 ? v.toFixed(1) : v.toFixed(0)) + 'k';
+  const pickCache = { left: '', right: '' };
+
+  function makePick() {
+    const li = document.createElement('li');
+    li.className = 'pick';
+    li.innerHTML = '<div class="jacket"></div>'
+            + '<div class="meta"><div class="song-title"></div></div>'
+            + '<div class="badge"></div>'
+            + '<div class="str-tag">STRATEGY</div>';
+    return li;
   }
-  const v = a / 1e6;
-  return trimZeros(v < 10 ? v.toFixed(2) : v.toFixed(1)) + 'M';
-}
 
-function trimZeros(str) {
-  return str.indexOf('.') < 0 ? str : str.replace(/0+$/, '').replace(/\.$/, '');
-}
+  function updatePick(li, song, i, animate) {
+    const jacket = li.querySelector('.jacket');
+    const bg = song.jacket ? `url("${song.jacket}")` : '';
+    if (jacket.style.backgroundImage !== bg) jacket.style.backgroundImage = bg;
 
-const meterDom = {};
-function meterEls() {
-  if (!meterDom.left) {
-    meterDom.left = document.getElementById('meter-left');
-    meterDom.right = document.getElementById('meter-right');
-    meterDom.knob = document.getElementById('meter-knob');
-    meterDom.label = document.getElementById('meter-label');
-  }
-  if (!meterDom.width) {
-    const track = meterDom.knob.parentElement;
-    meterDom.width = track ? track.clientWidth : 0;
-  }
-  return meterDom;
-}
-addEventListener('resize', () => { meterDom.width = 0; });
+    const title = li.querySelector('.song-title');
+    const titleText = song.title || '';
+    if (title.textContent !== titleText) title.textContent = titleText;
 
-let lastPct = null, lastLabel = null, lastLead = null;
+    const badge = li.querySelector('.badge');
+    const badgeText = `${song.diff || ''} ${song.level || ''}`.trim();
+    if (badge.textContent !== badgeText) badge.textContent = badgeText;
+    const varName = DIFF_VAR[(song.diff || '').toUpperCase()];
+    badge.style.background = varName ? `var(${varName})` : '';
 
-function setMeter(ratio, label, lead) {
-  const el = meterEls();
-  const leftPct = 50 - Math.max(-1, Math.min(1, ratio)) * 50;
-  const pct = Math.round(leftPct * 100) / 100;      
+    badge.style.color = varName ? '#000' : 'var(--gold)';
 
-  if (pct !== lastPct) {
-    lastPct = pct;
-    
-    el.left.style.transform = `scaleX(${pct / 100})`;
-    el.right.style.transform = `scaleX(${(100 - pct) / 100})`;
-    el.knob.style.transform = `translateX(${(pct / 100) * el.width}px)`;
-  }
-  if (lead !== lastLead) {
-    const flipped = lastLead && lead && lastLead !== lead;   
-    lastLead = lead;
-    el.knob.classList.toggle('lead-left', lead === 'left');
-    el.knob.classList.toggle('lead-right', lead === 'right');
-    if (flipped) {
+    li.classList.toggle('banned', !!song.banned);
+    li.classList.toggle('str-picked', !!song.strategyPick);
 
-      el.knob.classList.remove('flip');
-      void el.knob.offsetWidth;
-      el.knob.classList.add('flip');
+    const wantMark = !!song.banned;
+    const mark = li.querySelector('.ban-mark');
+    if (wantMark && !mark) {
+      const el = document.createElement('div');
+      el.className = 'ban-mark';
+      el.innerHTML = '<div class="cut-line"></div><div class="word">BANNED</div>';
+      li.appendChild(el);
+    } else if (!wantMark && mark) {
+      mark.remove();
+    }
+
+    if (animate) {
+      li.style.animation = 'none';
+      void li.offsetWidth;
+      li.style.animation = '';
+      li.style.animationDelay = `${i * 0.09}s`;
     }
   }
-  if (label !== lastLabel) {
-    lastLabel = label;
-    el.label.textContent = label;
+
+  let strSig = '';
+
+  function renderStrategy() {
+    const st = state.strategy || {};
+    const act = st.active;
+    const panel = document.getElementById('str-panel');
+
+    document.querySelectorAll('.pick.str-target').forEach((el) => {
+      el.classList.remove('str-target');
+      const s = el.querySelector('.scope');
+      if (s) s.remove();
+    });
+
+    if (!act) {
+      panel.classList.remove('on');
+      strSig = '';
+      return;
+    }
+
+    const sig = `${act.side}|${act.index}|${act.phase}|${act.choice}`;
+    const changed = sig !== strSig;
+    strSig = sig;
+
+    if (act.phase === 'aim') {
+      panel.classList.remove('on');
+      const ul = document.getElementById(`picks-${act.side}`);
+      const li = ul && ul.children[act.index];
+      if (li && changed) {
+        li.classList.add('str-target');
+        const sc = document.createElement('div');
+        sc.className = 'scope';
+        sc.innerHTML = '<div class="ring"></div><div class="cross-h"></div>' +
+                '<div class="cross-v"></div><div class="lock">STRATEGY</div>';
+        li.appendChild(sc);
+      } else if (li) {
+        li.classList.add('str-target');
+      }
+      return;
+    }
+
+    panel.classList.add('on');
+    const target = asArray(state.songs && state.songs[act.side])[act.index] || {};
+    document.getElementById('str-sub').textContent =
+            target.title ? `대체 대상 — ${target.title}` : '';
+
+    const wrap = document.getElementById('str-cards');
+    const pool = asArray(st.pool);
+    if (changed || wrap.children.length !== pool.length) {
+      wrap.innerHTML = '';
+      pool.forEach((song, i) => {
+        const c = document.createElement('div');
+        c.className = 'str-card';
+        c.style.animationDelay = `${i * 0.1}s`;
+        const varName = DIFF_VAR[(song.diff || '').toUpperCase()];
+        c.innerHTML =
+                `<div class="jacket"${song.jacket ? ` style="background-image:url('${song.jacket}')"` : ''}></div>` +
+                `<div class="t">${escapeHtml(song.title || '')}</div>` +
+                `<div class="b" style="background:${varName ? `var(${varName})` : 'var(--pill)'};` +
+                `color:${varName ? '#000' : 'var(--gold)'}">` +
+                `${escapeHtml(`${song.diff || ''} ${song.level || ''}`.trim())}</div>`;
+        wrap.appendChild(c);
+      });
+    }
+
+    const note = document.getElementById('str-note');
+    if (act.phase === 'cards') {
+
+      if (changed) {
+        wrap.classList.remove('shuffling');
+        void wrap.offsetWidth;
+        setTimeout(() => wrap.classList.add('shuffling'), 380);
+      }
+      note.className = 'str-note';
+      note.textContent = '';
+    } else if (act.phase === 'result') {
+      wrap.classList.remove('shuffling');
+      [...wrap.children].forEach((c, i) => {
+        c.classList.remove('picked', 'dropped');
+        if (act.choice === 'reset') c.classList.add('dropped');
+        else if (i === act.choice) c.classList.add('picked');
+        else c.classList.add('dropped');
+      });
+      note.textContent = act.choice === 'reset' ? '원곡 유지' : '선곡 대체';
+      note.className = 'str-note on';
+    }
   }
-}
 
-function badgeTexts() {
-  const m = state.match || {};
-  const b = m.badges || {};
-  if (b.mode === 'manual') {
-    const L = b.left || '', R = b.right || '';
-    
-    return { left: L, right: R,
-             leftStr: /STRATEGY/i.test(L), rightStr: /STRATEGY/i.test(R) };
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) =>
+            ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
-  const idx = Number(m.currentSong);
-  const side = m.currentSide;          
-  if (!side || !Number.isFinite(idx)) return { left: '', right: '', leftStr: false, rightStr: false };
+  function asArray(v) { return Array.isArray(v) ? v : []; }
 
-  const song = asArray(state.songs && state.songs[side])[idx];
-  if (!song) return { left: '', right: '', leftStr: false, rightStr: false };
+  function renderPicks(animate) {
 
-  const st = state.strategy || {};
-  const replaced = st.replacedSide === side && Number(st.replacedIndex) === idx;
+    const maxLen = Math.max(
+            asArray(state.songs && state.songs.left).length,
+            asArray(state.songs && state.songs.right).length
+    );
+    const layout = maxLen === 2 ? 'duo' : maxLen === 5 ? 'penta' : 'trio';
+    const picksEl = document.querySelector('.picks');
+    if (picksEl && picksEl.dataset.layout !== layout) picksEl.dataset.layout = layout;
 
-  const out = { left: '', right: '', leftStr: false, rightStr: false };
-  if (replaced) {
-    out[side] = 'STRATEGY';
-    out[side + 'Str'] = true;
-  } else {
-    out[side] = '자선곡';
+    ['left', 'right'].forEach((side) => {
+      const ul = document.getElementById(`picks-${side}`);
+      const songs = asArray(state.songs && state.songs[side]);
+      const sig = JSON.stringify(songs);
+      if (!animate && pickCache[side] === sig) return;
+      pickCache[side] = sig;
+
+      while (ul.children.length > songs.length) ul.lastElementChild.remove();
+      while (ul.children.length < songs.length) ul.appendChild(makePick());
+
+      songs.forEach((song, i) => updatePick(ul.children[i], song, i, animate));
+    });
   }
-  return out;
-}
 
-function renderBadges() {
-  const t = badgeTexts();
-  const bar = document.querySelector('.matchbar');
-  const logos = bar ? bar.querySelectorAll('.team-logo.sm') : [];
+  const videoEls = new Map();
+  const timelines = new Map();
+  const timelineSrc = new Map();
 
-  [['left', t.left, t.leftStr, 0], ['right', t.right, t.rightStr, 1]].forEach(
-    ([side, text, isStr, li]) => {
-      const el = document.getElementById(`badge-${side}`);
-      if (!el) return;
-      if (el.textContent !== text) el.textContent = text;
-      el.classList.toggle('on', !!text);
-      el.classList.toggle('str', !!isStr);
+  let combinedVideo = null;
+  let combinedSrc = '';
+  let combinedRAF = null;
+  const canvasEls = new Map();
 
-      const logo = logos[li];
-      if (logo && text) {
-        const lb = logo.offsetLeft, lw = logo.offsetWidth;
-        const ltop = logo.offsetTop, lh = logo.offsetHeight;
-        el.style.left = `${lb + (lw - el.offsetWidth) / 2}px`;
-        el.style.top = `${ltop + lh + 12}px`;
+  function isCombinedMode() {
+    return !!(state && state.match && state.match.combinedVideo);
+  }
+
+  const cursor = new Int32Array(32);
+
+  const timelineStatus = {};
+  let statusPushTimer = null;
+
+  function reportTimelineStatus(i, state_, detail) {
+    timelineStatus[i] = { state: state_, detail: detail || '' };
+    clearTimeout(statusPushTimer);
+    statusPushTimer = setTimeout(() => {
+      fetch('/api/diag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timelines: timelineStatus })
+      }).catch(() => {});
+    }, 200);
+  }
+
+  async function loadTimeline(i, url) {
+    if (timelineSrc.get(i) === url) return;
+    timelineSrc.set(i, url);
+    timelines.delete(i);
+    if (i < cursor.length) cursor[i] = 0;
+    if (!url) { reportTimelineStatus(i, 'empty'); return; }
+    try {
+      const res = await fetch(url);
+
+      if (!res.ok) throw new Error(`HTTP ${res.status} — 파일을 찾을 수 없습니다`);
+      const json = await res.json();
+      const pts = json.points || [];
+      if (!Array.isArray(pts) || !pts.length) throw new Error('points 가 비어 있습니다');
+      timelines.set(i, {
+        t: Float64Array.from(pts, (p) => p[0]),
+        s: Float64Array.from(pts, (p) => p[1])
+      });
+      const last = pts[pts.length - 1];
+      reportTimelineStatus(i, 'ok', `${pts.length}샘플 / 최종 ${Number(last[1]).toLocaleString('en-US')}`);
+    } catch (e) {
+      console.warn('타임라인 로드 실패:', url, e);
+      reportTimelineStatus(i, 'error', e.message);
+    }
+  }
+
+  function scoreAt(i, time) {
+    const tl = timelines.get(i);
+    if (!tl || !tl.t.length) return null;
+    if (time <= tl.t[0]) return tl.s[0];
+    let lo = 0, hi = tl.t.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (tl.t[mid] <= time) lo = mid; else hi = mid - 1;
+    }
+    return tl.s[lo];
+  }
+
+  function scoreAtSmooth(i, time) {
+    const tl = timelines.get(i);
+    if (!tl || !tl.t.length) return null;
+    const t = tl.t, s = tl.s, n = t.length;
+
+    if (time <= t[0]) return s[0];
+    if (time >= t[n - 1]) return s[n - 1];
+
+    let lo = i < cursor.length ? cursor[i] : 0;
+    if (lo >= n - 1 || t[lo] > time) lo = 0;
+    while (lo < n - 2 && t[lo + 1] <= time) lo++;
+    if (i < cursor.length) cursor[i] = lo;
+
+    const t0 = t[lo], t1 = t[lo + 1];
+    const span = t1 - t0;
+    if (span <= 0) return s[lo];
+    return s[lo] + (s[lo + 1] - s[lo]) * ((time - t0) / span);
+  }
+
+  function renderFeeds() {
+    const wrap = document.getElementById('feeds');
+    const slots = asArray(state.match && state.match.slots);
+    const combined = isCombinedMode();
+
+    const cols = String(slots.length || 4);
+    if (wrap.dataset.cols !== cols) {
+      wrap.dataset.cols = cols;
+      wrap.style.setProperty('--feed-cols', cols);
+    }
+
+    if (wrap.children.length !== slots.length || wrap.dataset.mode !== (combined ? 'combined' : 'split')) {
+      wrap.innerHTML = '';
+      wrap.dataset.mode = combined ? 'combined' : 'split';
+      videoEls.forEach((v) => v.remove()); videoEls.clear();
+      canvasEls.clear();
+
+      [...timelines.keys()].forEach((k) => { if (k >= slots.length) timelines.delete(k); });
+      [...timelineSrc.keys()].forEach((k) => { if (k >= slots.length) timelineSrc.delete(k); });
+      for (let k = slots.length; k < cursor.length; k++) cursor[k] = 0;
+      if (combinedVideo) { combinedVideo.remove(); combinedVideo = null; combinedSrc = ''; }
+      if (combinedRAF) { cancelAnimationFrame(combinedRAF); combinedRAF = null; }
+
+      slots.forEach(() => {
+        const feed = document.createElement('div');
+        feed.className = 'feed';
+        feed.innerHTML =
+                '<div class="rank"></div>' +
+                '<div class="frame"><div class="placeholder">NO SIGNAL</div></div>' +
+                '<div class="plate"><div class="avatar"></div><div class="brush"><span></span></div></div>';
+        wrap.appendChild(feed);
+      });
+    }
+
+    slots.forEach((slot, i) => {
+      const feed = wrap.children[i];
+      loadTimeline(i, slot.timeline || '');
+
+      if (feed.dataset.team !== (slot.team || '')) feed.dataset.team = slot.team || '';
+      const rankEl = feed.querySelector('.rank');
+
+      if (!state.match.autoRank) {
+        if (rankEl.textContent !== (slot.rank || '')) rankEl.textContent = slot.rank || '';
+        lastRankText[i] = null;
+      }
+      const nameEl = feed.querySelector('.plate .brush span');
+      if (nameEl.textContent !== (slot.player || '')) nameEl.textContent = slot.player || '';
+      const avatarEl = feed.querySelector('.plate .avatar');
+      const bg = slot.icon ? `url("${slot.icon}")` : '';
+      if (avatarEl.dataset.bg !== bg) { avatarEl.dataset.bg = bg; avatarEl.style.backgroundImage = bg; }
+    });
+
+    if (combined) renderCombinedFeeds(slots);
+    else renderSplitFeeds(slots);
+  }
+
+  function renderSplitFeeds(slots) {
+    const wrap = document.getElementById('feeds');
+    slots.forEach((slot, i) => {
+      const feed = wrap.children[i];
+      const frame = feed.querySelector('.frame');
+      const placeholder = frame.querySelector('.placeholder');
+      let video = videoEls.get(i);
+
+      if (slot.video) {
+        if (!video) {
+          video = document.createElement('video');
+          video.muted = true;
+          video.playsInline = true;
+          video.preload = 'auto';
+          frame.insertBefore(video, placeholder.nextSibling);
+          videoEls.set(i, video);
+        }
+        if (video.dataset.src !== slot.video) {
+          video.dataset.src = slot.video;
+          video.src = slot.video;
+          video.load();
+        }
+        placeholder.style.display = 'none';
+      } else {
+        if (video) { video.remove(); videoEls.delete(i); }
+        placeholder.style.display = '';
       }
     });
-}
-
-function renderMeter() {
-  const m = state.match || {};
-
-  const useHud = !!m.hudCrop && isCombinedMode();
-  const hudEl = document.getElementById('hud-banner');
-  if (hudEl && hudEl.classList.contains('on') !== useHud) {
-    hudEl.classList.toggle('on', useHud);
-    invalidateDrawPlan();
   }
 
-  const bar = document.querySelector('.matchbar');
-  if (bar) bar.classList.toggle('has-hud', useHud);
-  const feedsEl = document.getElementById('feeds');
-  if (feedsEl) {
-    feedsEl.style.top = useHud ? '372px' : '';
-    
-    if (feedsEl.classList.contains('has-hud') !== useHud) {
-      feedsEl.classList.toggle('has-hud', useHud);
-      invalidateDrawPlan();
+  function renderCombinedFeeds(slots) {
+    const wrap = document.getElementById('feeds');
+    const src = state.match.combinedVideo;
+
+    invalidateDrawPlan();
+    lastDrawnTime = -1;
+
+    if (!combinedVideo) {
+      combinedVideo = document.createElement('video');
+      // 소리를 켜서 재생합니다. 일반 탭 자동재생 정책 때문에 사용자 클릭
+      // 없이는 재생이 막힐 수 있으니, OBS 브라우저 소스에서는 속성의
+      // "페이지 권한 제어" 를 "고급 접근" 으로 설정해야 정상 재생됩니다.
+      combinedVideo.muted = false;
+      combinedVideo.playsInline = true;
+      combinedVideo.preload = 'auto';
+      combinedVideo.style.cssText = 'position:fixed; left:-9999px; top:-9999px; width:1px; height:1px;';
+      document.body.appendChild(combinedVideo);
+    }
+    if (combinedSrc !== src) {
+      combinedSrc = src;
+      combinedVideo.src = src;
+      combinedVideo.load();
+    }
+
+    slots.forEach((slot, i) => {
+      const feed = wrap.children[i];
+      const frame = feed.querySelector('.frame');
+      const placeholder = frame.querySelector('.placeholder');
+      let canvas = canvasEls.get(i);
+
+      if (src && slot.crop) {
+        if (!canvas) {
+          canvas = document.createElement('canvas');
+          canvas.style.cssText = 'position:absolute; inset:0; width:100%; height:100%;';
+          frame.insertBefore(canvas, placeholder.nextSibling);
+          canvasEls.set(i, canvas);
+        }
+        placeholder.style.display = 'none';
+      } else {
+        if (canvas) { canvas.remove(); canvasEls.delete(i); }
+        placeholder.style.display = '';
+      }
+    });
+
+    if (!combinedRAF) drawCombinedFrame();
+  }
+
+  let drawPlan = null;
+  let lastDrawnTime = -1;
+
+  function invalidateDrawPlan() { drawPlan = null; }
+  addEventListener('resize', invalidateDrawPlan);
+
+  function buildDrawPlan() {
+    const vw = combinedVideo.videoWidth, vh = combinedVideo.videoHeight;
+    const slots = asArray(state.match && state.match.slots);
+    const plan = [];
+
+    const add = (canvas, c) => {
+      if (!canvas || !c) return;
+      const sx = Math.round((c.x / 100) * vw), sy = Math.round((c.y / 100) * vh);
+      const sw = Math.round((c.w / 100) * vw), sh = Math.round((c.h / 100) * vh);
+      if (sw <= 0 || sh <= 0) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const dw = Math.max(1, Math.round(rect.width)), dh = Math.max(1, Math.round(rect.height));
+      if (canvas.width !== dw || canvas.height !== dh) { canvas.width = dw; canvas.height = dh; }
+
+      // alpha:false 는 투명도 합성을 생략(캔버스가 영상으로 꽉 차니 불필요).
+      // desynchronized:true 는 크롬이 지원하면 캔버스를 화면 수직동기와
+      // 분리해 즉시 그리게 합니다 - 메인 스레드가 컴포지터를 기다리는
+      // 시간을 줄여줍니다. 미지원 브라우저에서는 조용히 무시되는 표준 옵션이라
+      // 켜서 손해볼 일은 없습니다.
+      const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+      plan.push({ ctx, sx, sy, sw, sh, dw, dh });
+    };
+
+    const hud = state.match && state.match.hudCrop;
+    const hudEl = document.getElementById('hud-banner');
+    if (hud && hudEl && hudEl.classList.contains('on')) add(hudEl, hud);
+
+    slots.forEach((slot, i) => add(canvasEls.get(i), slot.crop));
+    return plan;
+  }
+
+  function drawCombinedFrame() {
+    combinedRAF = requestAnimationFrame(drawCombinedFrame);
+    if (!isCombinedMode() || !combinedVideo || !combinedVideo.videoWidth) return;
+
+    const t = combinedVideo.currentTime;
+    if (t === lastDrawnTime) return;
+    lastDrawnTime = t;
+
+    if (!drawPlan) drawPlan = buildDrawPlan();
+    for (let i = 0; i < drawPlan.length; i++) {
+      const p = drawPlan[i];
+      p.ctx.drawImage(combinedVideo, p.sx, p.sy, p.sw, p.sh, 0, 0, p.dw, p.dh);
     }
   }
 
-  const meterEl = document.getElementById('meter');
-  meterEl.style.display = useHud ? 'none' : '';
-  meterEl.parentElement.style.visibility =
-    (!useHud && m.meterVisible === false) ? 'hidden' : 'visible';
-
-  if (!useHud && !m.autoMeter) setMeter(Number(m.meter) || 0, m.label || '', '');
-  lastTickTime = -1;   
-}
-
-let lastLabelAt = 0;
-let cachedLabel = '';
-let lastTickTime = -1;
-let lastRankAt = 0;
-
-const RANK_LABEL = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
-const lastRankText = [];
-
-function updateRanks(values) {
-  const wrap = document.getElementById('feeds');
-  if (!wrap) return;
-
-  const order = [];
-  for (let i = 0; i < values.length; i++) {
-    if (values[i] != null) order.push({ i, v: values[i] });
+  function formatDiff(n) {
+    const a = Math.abs(Math.round(n));
+    if (a < 1000) return String(a);
+    if (a < 999500) {
+      const v = a / 1000;
+      return trimZeros(v < 100 ? v.toFixed(0) : v.toFixed(0)) + 'k';
+    }
+    const v = a / 1e6;
+    return trimZeros(v < 10 ? v.toFixed(2) : v.toFixed(1)) + 'M';
   }
-  if (!order.length) return;
-  order.sort((a, b) => b.v - a.v);
 
-  let rank = 0, prevVal = null;
-  for (let k = 0; k < order.length; k++) {
-    if (prevVal === null || order[k].v !== prevVal) rank = k + 1;
-    prevVal = order[k].v;
-    const text = RANK_LABEL[rank - 1] || `${rank}th`;
-    const idx = order[k].i;
-    if (lastRankText[idx] !== text) {
-      const hadPrev = lastRankText[idx] != null;   
-      lastRankText[idx] = text;
-      const feed = wrap.children[idx];
-      const el = feed && feed.querySelector('.rank');
-      if (el) {
-        el.textContent = text;
-        if (hadPrev) {
-          el.classList.remove('bump');
-          void el.offsetWidth;      
-          el.classList.add('bump');
+  function trimZeros(str) {
+    return str.indexOf('.') < 0 ? str : str.replace(/0+$/, '').replace(/\.$/, '');
+  }
+
+  const meterDom = {};
+  function meterEls() {
+    if (!meterDom.left) {
+      meterDom.left = document.getElementById('meter-left');
+      meterDom.right = document.getElementById('meter-right');
+      meterDom.knob = document.getElementById('meter-knob');
+      meterDom.label = document.getElementById('meter-label');
+    }
+    if (!meterDom.width) {
+      const track = meterDom.knob.parentElement;
+      meterDom.width = track ? track.clientWidth : 0;
+    }
+    return meterDom;
+  }
+  addEventListener('resize', () => { meterDom.width = 0; });
+
+  let lastPct = null, lastLabel = null, lastLead = null;
+
+  function setMeter(ratio, label, lead) {
+    const el = meterEls();
+    const leftPct = 50 - Math.max(-1, Math.min(1, ratio)) * 50;
+    const pct = Math.round(leftPct * 100) / 100;
+
+    if (pct !== lastPct) {
+      lastPct = pct;
+
+      el.left.style.transform = `scaleX(${pct / 100})`;
+      el.right.style.transform = `scaleX(${(100 - pct) / 100})`;
+      el.knob.style.transform = `translateX(${(pct / 100) * el.width}px)`;
+    }
+    if (lead !== lastLead) {
+      const flipped = lastLead && lead && lastLead !== lead;
+      lastLead = lead;
+      el.knob.classList.toggle('lead-left', lead === 'left');
+      el.knob.classList.toggle('lead-right', lead === 'right');
+      if (flipped) {
+
+        el.knob.classList.remove('flip');
+        void el.knob.offsetWidth;
+        el.knob.classList.add('flip');
+      }
+    }
+    if (label !== lastLabel) {
+      lastLabel = label;
+      el.label.textContent = label;
+    }
+  }
+
+  function badgeTexts() {
+    const m = state.match || {};
+    const b = m.badges || {};
+    if (b.mode === 'manual') {
+      const L = b.left || '', R = b.right || '';
+
+      return { left: L, right: R,
+        leftStr: /STRATEGY/i.test(L), rightStr: /STRATEGY/i.test(R) };
+    }
+
+    const idx = Number(m.currentSong);
+    const side = m.currentSide;
+    if (!side || !Number.isFinite(idx)) return { left: '', right: '', leftStr: false, rightStr: false };
+
+    const song = asArray(state.songs && state.songs[side])[idx];
+    if (!song) return { left: '', right: '', leftStr: false, rightStr: false };
+
+    const st = state.strategy || {};
+    const replaced = st.replacedSide === side && Number(st.replacedIndex) === idx;
+
+    const out = { left: '', right: '', leftStr: false, rightStr: false };
+    if (replaced) {
+      out[side] = 'STRATEGY';
+      out[side + 'Str'] = true;
+    } else {
+      out[side] = '자선곡';
+    }
+    return out;
+  }
+
+  function renderBadges() {
+    const t = badgeTexts();
+    const bar = document.querySelector('.matchbar');
+    const logos = bar ? bar.querySelectorAll('.team-logo.sm') : [];
+
+    [['left', t.left, t.leftStr, 0], ['right', t.right, t.rightStr, 1]].forEach(
+            ([side, text, isStr, li]) => {
+              const el = document.getElementById(`badge-${side}`);
+              if (!el) return;
+              if (el.textContent !== text) el.textContent = text;
+              el.classList.toggle('on', !!text);
+              el.classList.toggle('str', !!isStr);
+
+              const logo = logos[li];
+              if (logo && text) {
+                const lb = logo.offsetLeft, lw = logo.offsetWidth;
+                const ltop = logo.offsetTop, lh = logo.offsetHeight;
+                el.style.left = `${lb + (lw - el.offsetWidth) / 2}px`;
+                el.style.top = `${ltop + lh + 12}px`;
+              }
+            });
+  }
+
+  function renderMeter() {
+    const m = state.match || {};
+
+    const useHud = !!m.hudCrop && isCombinedMode();
+    const hudEl = document.getElementById('hud-banner');
+    if (hudEl && hudEl.classList.contains('on') !== useHud) {
+      hudEl.classList.toggle('on', useHud);
+      invalidateDrawPlan();
+    }
+
+    const bar = document.querySelector('.matchbar');
+    if (bar) bar.classList.toggle('has-hud', useHud);
+    const feedsEl = document.getElementById('feeds');
+    if (feedsEl) {
+      feedsEl.style.top = useHud ? '372px' : '';
+
+      if (feedsEl.classList.contains('has-hud') !== useHud) {
+        feedsEl.classList.toggle('has-hud', useHud);
+        invalidateDrawPlan();
+      }
+    }
+
+    const meterEl = document.getElementById('meter');
+    meterEl.style.display = useHud ? 'none' : '';
+    meterEl.parentElement.style.visibility =
+            (!useHud && m.meterVisible === false) ? 'hidden' : 'visible';
+
+    if (!useHud && !m.autoMeter) setMeter(Number(m.meter) || 0, m.label || '', '');
+    lastTickTime = -1;
+  }
+
+  let lastLabelAt = 0;
+  let cachedLabel = '';
+  let lastTickTime = -1;
+  let lastRankAt = 0;
+
+  const RANK_LABEL = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
+  const lastRankText = [];
+
+  function updateRanks(values) {
+    const wrap = document.getElementById('feeds');
+    if (!wrap) return;
+
+    const order = [];
+    for (let i = 0; i < values.length; i++) {
+      if (values[i] != null) order.push({ i, v: values[i] });
+    }
+    if (!order.length) return;
+    order.sort((a, b) => b.v - a.v);
+
+    let rank = 0, prevVal = null;
+    for (let k = 0; k < order.length; k++) {
+      if (prevVal === null || order[k].v !== prevVal) rank = k + 1;
+      prevVal = order[k].v;
+      const text = RANK_LABEL[rank - 1] || `${rank}th`;
+      const idx = order[k].i;
+      if (lastRankText[idx] !== text) {
+        const hadPrev = lastRankText[idx] != null;
+        lastRankText[idx] = text;
+        const feed = wrap.children[idx];
+        const el = feed && feed.querySelector('.rank');
+        if (el) {
+          el.textContent = text;
+          if (hadPrev) {
+            el.classList.remove('bump');
+            void el.offsetWidth;
+            el.classList.add('bump');
+          }
         }
       }
     }
   }
-}
 
-function autoTick(now) {
+  function autoTick(now) {
+    requestAnimationFrame(autoTick);
+    if (!state || state.view !== 'match') return;
+
+    if (state.match.hudCrop) return;
+    const wantMeter = !!state.match.autoMeter;
+    const wantRank = !!state.match.autoRank;
+    if (!wantMeter && !wantRank) return;
+
+    const slots = asArray(state.match && state.match.slots);
+    const master = isCombinedMode() ? combinedVideo : videoEls.get(0);
+    if (!master || !slots.length) return;
+
+    const mt = master.currentTime;
+    if (mt === lastTickTime) return;
+    lastTickTime = mt;
+
+    const combined = isCombinedMode();
+    const base = combined ? mt : mt - (Number(slots[0].offsetMs) || 0) / 1000;
+
+    // 한 통합 영상에 곡 여러 개가 이어 붙은 경우(예: 1라운드 4곡), 점수는
+    // 곡이 바뀔 때마다 0으로 리셋됩니다. 단조 증가 가정이 깨지므로 자동
+    // 감지 대신 오퍼레이터가 "이번 곡 시작 지점"을 버튼으로 찍어두면,
+    // 그 시점 이후 점수 = 지금 값 - 그 시점 값(곡 시작 스냅샷) 으로 계산합니다.
+    const resetAt = state.match.songResetAt;
+    const useReset = Number.isFinite(resetAt) && resetAt >= 0;
+
+    const values = [];
+    let left = 0, right = 0, found = false;
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
+      const t = combined ? base : base + (Number(slot.offsetMs) || 0) / 1000;
+      let v = scoreAtSmooth(i, t);
+      if (v != null && useReset) {
+        const base0 = scoreAtSmooth(i, resetAt);
+        if (base0 != null) v = Math.max(0, v - base0);
+      }
+      values.push(v);   // updateRanks 가 인덱스로 슬롯을 찾으므로 null 이어도 자리는 채움
+      if (v == null) continue;
+      found = true;
+      if (slot.team === 'right') right += v; else left += v;
+    }
+    if (!found) return;
+
+    if (wantRank && now - lastRankAt >= 500) {
+      lastRankAt = now;
+      updateRanks(values);
+    }
+    if (!wantMeter) return;
+
+    const diff = right - left;
+    const max = Number(state.match.maxDiff) || 150000;
+    const lead = diff > 0 ? 'right' : diff < 0 ? 'left' : '';
+
+    if (now - lastLabelAt >= 500) {
+      lastLabelAt = now;
+      const rounded = Math.round(diff);
+      cachedLabel = state.match.labelStyle === 'full'
+              ? Math.abs(rounded).toLocaleString('en-US')
+              : formatDiff(rounded);
+    }
+
+    setMeter(diff / max, cachedLabel, lead);
+  }
   requestAnimationFrame(autoTick);
-  if (!state || state.view !== 'match') return;
-  
-  if (state.match.hudCrop) return;
-  const wantMeter = !!state.match.autoMeter;
-  const wantRank = !!state.match.autoRank;
-  if (!wantMeter && !wantRank) return;
 
-  const slots = asArray(state.match && state.match.slots);
-  const master = isCombinedMode() ? combinedVideo : videoEls.get(0);
-  if (!master || !slots.length) return;
+  let prevView = null;
 
-  const mt = master.currentTime;
-  if (mt === lastTickTime) return;
-  lastTickTime = mt;
+  function render() {
+    state.view = normView(state.view);
+    const viewChanged = prevView !== state.view;
+    prevView = state.view;
 
-  const combined = isCombinedMode();
-  const base = combined ? mt : mt - (Number(slots[0].offsetMs) || 0) / 1000;
-
-  const values = [];
-  let left = 0, right = 0, found = false;
-  for (let i = 0; i < slots.length; i++) {
-    const slot = slots[i];
-    const t = combined ? base : base + (Number(slot.offsetMs) || 0) / 1000;
-    const v = scoreAtSmooth(i, t);
-    values.push(v);
-    if (v == null) continue;
-    found = true;
-    if (slot.team === 'right') right += v; else left += v;
-  }
-  if (!found) return;
-
-  if (wantRank && now - lastRankAt >= 120) {
-    lastRankAt = now;
-    updateRanks(values);
-  }
-  if (!wantMeter) return;
-
-  const diff = right - left;
-  const max = Number(state.match.maxDiff) || 150000;
-  const lead = diff > 0 ? 'right' : diff < 0 ? 'left' : '';
-
-  if (now - lastLabelAt >= 80) {
-    lastLabelAt = now;
-    const rounded = Math.round(diff);
-    cachedLabel = state.match.labelStyle === 'full'
-      ? Math.abs(rounded).toLocaleString('en-US')
-      : formatDiff(rounded);
+    document.querySelectorAll('.view').forEach((v) => {
+      v.classList.toggle('active', v.dataset.view.split(' ').includes(state.view));
+    });
+    applyBindings();
+    if (state.view === 'songs') { renderPicks(viewChanged); renderStrategy(); }
+    else document.getElementById('str-panel').classList.remove('on');
+    if (state.view === 'match') { renderFeeds(); renderMeter(); renderBadges(); }
   }
 
-  setMeter(diff / max, cachedLabel, lead);
-}
-requestAnimationFrame(autoTick);
-
-let prevView = null;
-
-function render() {
-  state.view = normView(state.view);
-  const viewChanged = prevView !== state.view;
-  prevView = state.view;
-
-  document.querySelectorAll('.view').forEach((v) => {
-    v.classList.toggle('active', v.dataset.view.split(' ').includes(state.view));
-  });
-  applyBindings();
-  if (state.view === 'songs') { renderPicks(viewChanged); renderStrategy(); }
-  else document.getElementById('str-panel').classList.remove('on');   
-  if (state.view === 'match') { renderFeeds(); renderMeter(); renderBadges(); }
-}
-
-function seekAll(t) {
-  if (isCombinedMode()) {
-    if (combinedVideo) combinedVideo.currentTime = Math.max(0, t);
-    return;
+  function seekAll(t) {
+    if (isCombinedMode()) {
+      if (combinedVideo) combinedVideo.currentTime = Math.max(0, t);
+      return;
+    }
+    const slots = asArray(state.match && state.match.slots);
+    videoEls.forEach((video, i) => {
+      const offset = (slots[i] && Number(slots[i].offsetMs)) || 0;
+      video.currentTime = Math.max(0, t + offset / 1000);
+    });
   }
-  const slots = asArray(state.match && state.match.slots);
-  videoEls.forEach((video, i) => {
-    const offset = (slots[i] && Number(slots[i].offsetMs)) || 0;
-    video.currentTime = Math.max(0, t + offset / 1000);
-  });
-}
 
-function allVideos() {
-  return isCombinedMode() ? (combinedVideo ? [combinedVideo] : []) : [...videoEls.values()];
-}
-
-function handleCmd(cmd) {
-  switch (cmd.type) {
-    case 'play':
-      allVideos().forEach((v) => v.play().catch(() => {}));
-      break;
-    case 'pause':
-      allVideos().forEach((v) => v.pause());
-      break;
-    case 'seek':
-      seekAll(Number(cmd.t) || 0);
-      break;
-    case 'restart':
-      seekAll(0);
-      allVideos().forEach((v) => v.play().catch(() => {}));
-      break;
-    case 'replayBan':
-      document.querySelectorAll('.ban-mark').forEach((el) => el.remove());
-      pickCache.left = pickCache.right = '';
-      renderPicks(false);
-      break;
-    case 'replayStrategy':
-      strSig = '';           
-      renderStrategy();
-      break;
-    case 'reload':
-      location.reload();
-      break;
+  function allVideos() {
+    return isCombinedMode() ? (combinedVideo ? [combinedVideo] : []) : [...videoEls.values()];
   }
-}
 
-function connect() {
-  const es = new EventSource('/api/events');
-  es.addEventListener('state', (e) => { state = JSON.parse(e.data); render(); });
-  es.addEventListener('cmd', (e) => handleCmd(JSON.parse(e.data)));
-  es.onerror = () => { es.close(); setTimeout(connect, 1500); };
-}
-connect();
+  function handleCmd(cmd) {
+    switch (cmd.type) {
+      case 'play':
+        allVideos().forEach((v) => v.play().catch(() => {}));
+        break;
+      case 'pause':
+        allVideos().forEach((v) => v.pause());
+        break;
+      case 'seek':
+        seekAll(Number(cmd.t) || 0);
+        break;
+      case 'restart':
+        seekAll(0);
+        allVideos().forEach((v) => v.play().catch(() => {}));
+        break;
+      case 'replayBan':
+        document.querySelectorAll('.ban-mark').forEach((el) => el.remove());
+        pickCache.left = pickCache.right = '';
+        renderPicks(false);
+        break;
+      case 'replayStrategy':
+        strSig = '';
+        renderStrategy();
+        break;
+      case 'songReset': {
+        // 통합 영상 안에 곡이 여러 개 이어진 경우(1라운드 4곡 등), 지금
+        // 재생 위치를 "이번 곡 시작점"으로 서버에 저장합니다. autoTick 은
+        // 이 시점 이후로 (현재점수 - 이 시점 점수) 를 미터에 씁니다.
+        const master = isCombinedMode() ? combinedVideo : videoEls.get(0);
+        const at = master ? master.currentTime : 0;
+        fetch('/api/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ match: { songResetAt: at } })
+        }).catch(() => {});
+        break;
+      }
+      case 'songResetClear':
+        fetch('/api/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ match: { songResetAt: null } })
+        }).catch(() => {});
+        break;
+      case 'reload':
+        location.reload();
+        break;
+    }
+  }
+
+  function connect() {
+    const es = new EventSource('/api/events');
+    es.addEventListener('state', (e) => { state = JSON.parse(e.data); render(); });
+    es.addEventListener('cmd', (e) => handleCmd(JSON.parse(e.data)));
+    es.onerror = () => { es.close(); setTimeout(connect, 1500); };
+  }
+  connect();
 
 </script>
 </body>

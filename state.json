@@ -1,13 +1,13 @@
 {
-  "view": "match",
+  "view": "songs",
   "round": {
     "kicker": "ARENA BATTLE",
     "title": "ROUND 1",
-    "sub": "EVOLVE"
+    "sub": "LEGACY"
   },
   "teams": {
     "left": {
-      "name": "1111 2222",
+      "name": "이마트빵도둑볼은우",
       "logo": "https://i.imgur.com/pap50yH.jpeg",
       "score": 0,
       "players": [
@@ -22,7 +22,7 @@
       ]
     },
     "right": {
-      "name": "22222 3333",
+      "name": "비순애사랑단",
       "logo": "https://i.imgur.com/aL9xhIQ.png",
       "score": 0,
       "players": [
@@ -40,46 +40,46 @@
   "songs": {
     "left": [
       {
-        "title": "物凄いスペースシャトルでこいしが物凄いうた",
-        "jacket": "",
-        "diff": "MXM",
+        "title": "continew",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F649_exhaust.webp",
+        "diff": "EXH",
         "level": "17.5",
         "banned": false
       },
       {
-        "title": "1",
-        "jacket": "",
+        "title": "TIEFSEE",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F629_exhaust.webp",
         "diff": "EXH",
-        "level": "",
+        "level": "17.5",
         "banned": false
       },
       {
-        "title": "",
-        "jacket": "",
+        "title": "DIABLOSIS::Nāga",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F914_exhaust.webp",
         "diff": "EXH",
-        "level": "",
+        "level": "17.5",
         "banned": false
       }
     ],
     "right": [
       {
-        "title": "vivid landscape",
-        "jacket": "",
-        "diff": "MXM",
+        "title": "good high school",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F7_infinite.webp",
+        "diff": "INF",
         "level": "17.5",
         "banned": false
       },
       {
-        "title": "PIZZATIME",
-        "jacket": "",
-        "diff": "MXM",
-        "level": "17.5",
-        "banned": false
-      },
-      {
-        "title": "",
-        "jacket": "",
+        "title": "Verse IV",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F376_exhaust.webp",
         "diff": "EXH",
+        "level": "17.5",
+        "banned": false
+      },
+      {
+        "title": "Inixia",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F829_gravity.webp",
+        "diff": "GRV",
         "level": "",
         "banned": false
       }
@@ -97,13 +97,14 @@
         "icon": "",
         "video": "",
         "offsetMs": 0,
-        "timeline": "/tools/match.p1.scores.json",
+        "timeline": "",
         "crop": {
           "x": 0,
           "y": 0,
           "w": 25,
           "h": 100
-        }
+        },
+        "altActive": true
       },
       {
         "rank": "1st",
@@ -146,9 +147,9 @@
       }
     ],
     "autoMeter": true,
-    "maxDiff": 500000,
+    "maxDiff": 150000,
     "labelStyle": "short",
-    "combinedVideo": "/videos/match_new.mp4 ",
+    "combinedVideo": "/videos/all4.mp4",
     "autoRank": true,
     "currentSide": "left",
     "currentSong": 0,
@@ -157,7 +158,28 @@
       "left": "자선곡",
       "right": ""
     },
-    "hudCrop": null
+    "hudCrop": null,
+    "altScreens": {
+      "0": {
+        "crop": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0
+        },
+        "timeline": "",
+        "label": "정상 화면",
+        "altCrop": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0
+        },
+        "altTimeline": "",
+        "altLabel": "대체 화면"
+      }
+    },
+    "songResetAt": null
   },
   "strategy": {
     "used": true,

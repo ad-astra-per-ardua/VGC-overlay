@@ -269,10 +269,14 @@ def load_breakpoints(raw, breaks_file):
     """
     text = raw
     if breaks_file:
-        with open(breaks_file, encoding='utf-8') as f:
+        # 윈도우 PowerShell 의 Out-File -Encoding utf8 은 파일 맨 앞에
+        # BOM(눈에 안 보이는 마커)을 붙이는 경우가 흔합니다. utf-8-sig 로
+        # 읽으면 BOM 이 있어도 없어도 둘 다 안전하게 처리됩니다.
+        with open(breaks_file, encoding='utf-8-sig') as f:
             text = f.read()
     if not text:
         return []
+    text = text.lstrip('\ufeff')   # 문자열로 직접 넘어온 경우의 BOM 도 방어
     try:
         data = json.loads(text)
     except json.JSONDecodeError as e:
@@ -295,11 +299,24 @@ def cmd_run(args):
     if not cap.isOpened():
         raise SystemExit(f'영상을 열 수 없습니다: {args.video}')
     src_fps = cap.get(cv2.CAP_PROP_FPS) or 60.0
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
     vw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
     vh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
     cap.release()
     stride = max(1, round(src_fps / cfg['fps']))
+
+    # 영상 전체가 아니라 특정 구간만 인식합니다(예: 3라운드 4번 선수처럼
+    # 화면 소스가 중간에 바뀌는 경우, 구간별로 다른 config 를 따로 돌림).
+    start_sec = parse_timestamp(args.start) if args.start else 0.0
+    end_sec = parse_timestamp(args.end) if args.end else None
+    start_frame = max(0, round(start_sec * src_fps))
+    end_frame = total_frames if end_sec is None else min(total_frames, round(end_sec * src_fps))
+    if start_frame >= end_frame and total_frames > 0:
+        raise SystemExit(f'--start({start_sec:g}s) 가 --end({end_sec}s) 보다 뒤입니다.')
+    total = end_frame - start_frame   # 이후 코드는 "처리할 프레임 수" 로 total 을 그대로 씀
+    if start_frame > 0 or end_frame != total_frames:
+        print(f'구간 제한: {start_sec:g}s ~ {"영상 끝" if end_sec is None else f"{end_sec:g}s"} '
+              f'(프레임 {start_frame}~{end_frame})', file=sys.stderr)
 
     explicit = args.workers > 0
     requested = args.workers if explicit else (os.cpu_count() or 1)
@@ -320,9 +337,9 @@ def cmd_run(args):
         import multiprocessing as mp
         per = ((total // workers) // stride + 1) * stride
         jobs = []
-        s = 0
-        while s < total:
-            e = min(total, s + per)
+        s = start_frame
+        while s < end_frame:
+            e = min(end_frame, s + per)
             jobs.append((args.video, cfg, args.templates, s, e, stride, src_fps, args.hwaccel))
             s = e
         print(f'{len(jobs)}개 구간을 {workers}개 프로세스로 병렬 처리', file=sys.stderr)
@@ -332,11 +349,11 @@ def cmd_run(args):
         samples.sort(key=lambda x: x[0])
     else:
         templates = [load_templates(args.templates, i) for i in range(n_fields)]
-        done = [0]
         def progress(idx):
             if total:
-                print(f'\r{idx}/{total}  ({idx * 100 // total}%)', end='', file=sys.stderr)
-        samples = run_range(args.video, cfg, templates, 0, total or 1 << 62,
+                done = idx - start_frame
+                print(f'\r{done}/{total}  ({done * 100 // total}%)', end='', file=sys.stderr)
+        samples = run_range(args.video, cfg, templates, start_frame, end_frame or 1 << 62,
                             stride, src_fps, progress, hwaccel=args.hwaccel)
         print('', file=sys.stderr)
 
@@ -532,6 +549,11 @@ def main():
                         '예: --breaks \'["01:30","03:12","04:50"]\' (mm:ss 또는 초 단위 숫자)')
     r.add_argument('--breaks-file', default='',
                    help='--breaks 를 파일로 줄 때. 파일 내용은 위와 같은 JSON 배열')
+    r.add_argument('--start', default='',
+                   help='이 시각부터만 인식합니다(mm:ss 또는 초). 화면 소스가 중간에 바뀌는 '
+                        '선수를 구간별로 따로 돌릴 때 씁니다. 기본은 영상 처음부터.')
+    r.add_argument('--end', default='',
+                   help='이 시각까지만 인식합니다(mm:ss 또는 초). 기본은 영상 끝까지.')
     r.set_defaults(func=cmd_run)
 
     c = sub.add_parser('check', help='특정 시점의 인식 결과를 자릿수별로 확인')
