@@ -1,150 +1,128 @@
 {
-  "view": "songs",
+  "view": "match",
   "round": {
-    "kicker": "SINGLE BATTLE",
-    "title": "ROUND 4",
-    "sub": "FREE"
+    "kicker": "ARENA BATTLE",
+    "title": "ROUND 1",
+    "sub": "EVOLVE"
   },
   "teams": {
     "left": {
-      "name": "이마트빵도둑볼은우",
-      "logo": "https://i.imgur.com/pap50yH.jpeg",
-      "score": 2,
-      "players": [
-        {
-          "name": "장박짱",
-          "icon": ""
-        },
-        {
-          "name": "소구리마",
-          "icon": ""
-        }
-      ]
+      "name": "왼쪽 팀",
+      "logo": "",
+      "score": 0,
+      "players": []
     },
     "right": {
-      "name": "비순애사랑단",
-      "logo": "https://i.imgur.com/aL9xhIQ.png",
-      "score": 2,
-      "players": [
-        {
-          "name": "MindBlow",
-          "icon": ""
-        },
-        {
-          "name": "쿠크시",
-          "icon": ""
-        }
-      ]
+      "name": "오른쪽 팀",
+      "logo": "",
+      "score": 0,
+      "players": []
     }
   },
   "songs": {
     "left": [
       {
-        "title": "物凄いスペースシャトルでこいしが物凄いうた",
-        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1078_maximum.webp",
+        "title": "",
+        "jacket": "",
         "diff": "MXM",
-        "level": "17.5",
+        "level": "",
         "banned": false
       },
       {
-        "title": "Everlasting Message",
-        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F636_ultimate.webp",
+        "title": "",
+        "jacket": "",
         "diff": "MXM",
-        "level": "20.9",
-        "banned": true
+        "level": "",
+        "banned": false
+      },
+      {
+        "title": "",
+        "jacket": "",
+        "diff": "MXM",
+        "level": "",
+        "banned": false
       }
     ],
     "right": [
       {
-        "title": "vivid landscape",
-        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1311_maximum.webp",
+        "title": "",
+        "jacket": "",
         "diff": "MXM",
-        "level": "17.5",
-        "banned": true
+        "level": "",
+        "banned": false
       },
       {
-        "title": "PIZZATIME",
-        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1421_maximum.webp",
+        "title": "",
+        "jacket": "",
         "diff": "MXM",
-        "level": "17.5",
+        "level": "",
+        "banned": false
+      },
+      {
+        "title": "",
+        "jacket": "",
+        "diff": "MXM",
+        "level": "",
         "banned": false
       }
     ]
   },
   "match": {
     "label": "",
-    "meter": 0.28,
+    "meter": 0,
     "meterVisible": true,
-    "slots": [
-      {
-        "rank": "3rd",
-        "team": "left",
-        "player": "1",
-        "icon": "",
-        "video": "",
-        "offsetMs": 0,
-        "timeline": "",
-        "crop": {
-          "x": 0,
-          "y": 0,
-          "w": 50,
-          "h": 100
-        }
-      },
-      {
-        "rank": "1st",
-        "team": "right",
-        "player": "2",
-        "icon": "",
-        "video": "",
-        "offsetMs": 0,
-        "timeline": "",
-        "crop": {
-          "x": 50,
-          "y": 0,
-          "w": 50,
-          "h": 100
-        }
-      }
-    ],
     "autoMeter": false,
+    "autoRank": false,
+    "combinedVideo": "",
     "maxDiff": 150000,
     "labelStyle": "short",
-    "combinedVideo": "/videos/all4.mp4",
-    "autoRank": false,
-    "currentSide": "left",
-    "currentSong": 0,
+    "hudCrop": null,
     "badges": {
       "mode": "manual",
       "left": "자선곡",
-      "right": ""
+      "right": "",
+      "leftPicker": "11",
+      "rightPicker": ""
     },
-    "hudCrop": null
+    "currentSide": "",
+    "currentSong": 0,
+    "slots": [
+      {
+        "rank": "1st",
+        "team": "left",
+        "player": "",
+        "icon": "",
+        "video": "",
+        "offsetMs": 0
+      },
+      {
+        "rank": "2nd",
+        "team": "left",
+        "player": "",
+        "icon": "",
+        "video": "",
+        "offsetMs": 0
+      },
+      {
+        "rank": "3rd",
+        "team": "right",
+        "player": "",
+        "icon": "",
+        "video": "",
+        "offsetMs": 0
+      },
+      {
+        "rank": "4th",
+        "team": "right",
+        "player": "",
+        "icon": "",
+        "video": "",
+        "offsetMs": 0
+      }
+    ]
   },
   "strategy": {
-    "used": true,
-    "pool": [
-      {
-        "title": "Sudden Visitor",
-        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1466_maximum.webp",
-        "diff": "MXM",
-        "level": "18.2"
-      },
-      {
-        "title": "Everlasting Message",
-        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F636_ultimate.webp",
-        "diff": "MXM",
-        "level": "20.9"
-      },
-      {
-        "title": "Juggler's Maddness",
-        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1106_maximum.webp",
-        "diff": "MXM",
-        "level": "18.6"
-      }
-    ],
     "active": null,
-    "replacedSide": "left",
-    "replacedIndex": 1
+    "pool": []
   }
 }

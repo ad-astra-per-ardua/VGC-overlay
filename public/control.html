@@ -241,6 +241,7 @@
     <div id="badge-manual-box" style="display:none">
       <p class="muted" style="margin:0 0 8px; font-size:12px">
         배지는 한 번에 한 팀만 표시됩니다. 반대편을 누르면 이전 것은 자동으로 사라집니다.
+        "자선곡" 은 "Track Selected By" / "자선곡 플레이 중" 두 줄이 번갈아 페이드됩니다.
       </p>
       <div class="row">
         <span class="muted" style="font-size:12px; min-width:64px">왼쪽</span>
@@ -953,7 +954,7 @@ document.querySelectorAll('#str-choose button').forEach((btn) => {
       state.songs[act.side][act.index] = {
         title: picked.title, jacket: picked.jacket,
         diff: picked.diff, level: picked.level, banned: false,
-        strategyPick: true   // 이 곡이 STRATEGY 로 교체됐음을 곡 데이터 자체에 남김
+        strategyPick: true
       };
       pendingBans[act.side].delete(act.index);
 

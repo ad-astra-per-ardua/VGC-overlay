@@ -445,29 +445,47 @@ html, body {
 
 .team-badge {
   position: absolute; top: 176px;
-  width: 124px;
-  height: 52px;
-  display: none; align-items: center; justify-content: center;
-  padding: 0 6px;
+  min-width: 124px; max-width: 340px;
+  height: 44px;
+  display: none;
+  padding: 0 12px;
   background: #0A0806;
   border: 2px solid var(--gold);
   color: var(--gold);
   font-family: var(--font-display);
-  font-size: 21px; font-weight: 700; letter-spacing: .04em;
+  font-size: 14px; font-weight: 700; letter-spacing: .01em;
   white-space: nowrap;
+  overflow: hidden;
   z-index: 4;
 }
-.team-badge.on { display: flex; animation: badge-in .3s ease-out; }
-@keyframes badge-in {
-  from { opacity: 0; transform: translateY(-8px); }
+.team-badge.on { display: grid; }
+.team-badge .badge-line {
+  grid-area: 1 / 1;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  animation: badge-cross 6s ease-in-out infinite;
+}
+.team-badge .badge-line.b2 { animation-delay: 3s; }
+@keyframes badge-cross {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  42%  { opacity: 1; }
+  50%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .team-badge .badge-line { animation: none !important; opacity: 1; }
+  .team-badge .badge-line.b2 { display: none; }
 }
 
 .team-badge.str {
   border-color: var(--red);
   color: var(--cream);
   background: #2A0D0A;
-  font-size: 17px; letter-spacing: .02em;
+  font-size: 15px; letter-spacing: .01em;
 }
+.team-badge.str .badge-line { animation: none; opacity: 1; }
+.team-badge.str .badge-line.b2 { display: none; }
 
 #badge-left, #badge-right { left: 0; }
 
@@ -514,7 +532,7 @@ html, body {
   position: absolute; top: 0; bottom: 0;
 
   width: 100%;
-  transition: transform .08s linear;
+  transition: transform .25s cubic-bezier(.25, .1, .25, 1);
   will-change: transform;
 }
 .meter-fill-left  { left: 0;  transform-origin: left center;  transform: scaleX(.5);
@@ -527,7 +545,7 @@ html, body {
   left: 0;
   width: 0;
   display: flex; justify-content: center;
-  transition: transform .08s linear;
+  transition: transform .25s cubic-bezier(.25, .1, .25, 1);
   z-index: 3;
   will-change: transform;
 }
@@ -655,12 +673,14 @@ html, body {
 
   <div class="bg-deco" aria-hidden="true"></div>
 
+  <!-- STRATEGY 후보 3장 패널 (선곡 뷰 위에 겹쳐 뜸) -->
   <div id="str-panel">
     <div class="str-head">STRATEGY<small id="str-sub"></small></div>
     <div class="str-cards" id="str-cards"></div>
     <div class="str-note" id="str-note"></div>
   </div>
 
+  <!-- 선곡 / 밴 공용 뷰 -->
   <section class="view" data-view="songs">
     <header class="topbar">
       <div class="side left">
@@ -1106,9 +1126,6 @@ function renderCombinedFeeds(slots) {
 
   if (!combinedVideo) {
     combinedVideo = document.createElement('video');
-    // 소리를 켜서 재생합니다. 일반 탭 자동재생 정책 때문에 사용자 클릭
-    // 없이는 재생이 막힐 수 있으니, OBS 브라우저 소스에서는 속성의
-    // "페이지 권한 제어" 를 "고급 접근" 으로 설정해야 정상 재생됩니다.
     combinedVideo.muted = false;
     combinedVideo.playsInline = true;
     combinedVideo.preload = 'auto';
@@ -1294,7 +1311,16 @@ function renderBadges() {
     ([side, text, isStr, li]) => {
       const el = document.getElementById(`badge-${side}`);
       if (!el) return;
-      if (el.textContent !== text) el.textContent = text;
+
+      const line1 = isStr ? text : 'Track Selected By';
+      const line2 = isStr ? '' : '자선곡 플레이 중';
+      const sig = `${text}|${isStr}`;
+      if (el.dataset.sig !== sig) {
+        el.dataset.sig = sig;
+        el.innerHTML = isStr
+          ? `<span class="badge-line b1">${line1}</span>`
+          : `<span class="badge-line b1">${line1}</span><span class="badge-line b2">${line2}</span>`;
+      }
       el.classList.toggle('on', !!text);
       el.classList.toggle('str', !!isStr);
 
@@ -1414,7 +1440,7 @@ function autoTick(now) {
       const base0 = scoreAtSmooth(i, resetAt);
       if (base0 != null) v = Math.max(0, v - base0);
     }
-    values.push(v);   // updateRanks 가 인덱스로 슬롯을 찾으므로 null 이어도 자리는 채움
+    values.push(v);
     if (v == null) continue;
     found = true;
     if (slot.team === 'right') right += v; else left += v;
@@ -1500,9 +1526,6 @@ function handleCmd(cmd) {
       renderStrategy();
       break;
     case 'songReset': {
-      // 통합 영상 안에 곡이 여러 개 이어진 경우(1라운드 4곡 등), 지금
-      // 재생 위치를 "이번 곡 시작점"으로 서버에 저장합니다. autoTick 은
-      // 이 시점 이후로 (현재점수 - 이 시점 점수) 를 미터에 씁니다.
       const master = isCombinedMode() ? combinedVideo : videoEls.get(0);
       const at = master ? master.currentTime : 0;
       fetch('/api/state', {
