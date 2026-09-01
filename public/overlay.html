@@ -492,7 +492,7 @@ html, body {
 .hud-banner {
   display: none;
 
-  width: 800px; height: 240px;
+  width: 720px; height: 250px;
   flex: none;
   border: 2px solid var(--card-edge);
   border-radius: 4px;
@@ -583,12 +583,16 @@ html, body {
 }
 
 .feeds.has-hud {
-  grid-template-columns: repeat(2, 366px);
+  grid-template-columns: repeat(2, 476px);   /* 591 * (366/540) ≈ 400 */
   justify-content: center;
-  gap: 12px;
+  gap: 106px;
+  bottom: 90px;
 }
 .feeds.has-hud .feed .frame {
-  height: 540px; flex: none;
+  height: 701px; flex: none;
+}
+.feeds.has-hud .feed .rank {
+  display: none;
 }
 
 .feeds[data-cols="2"]:not(.has-hud) {
@@ -1348,7 +1352,7 @@ function renderMeter() {
   if (bar) bar.classList.toggle('has-hud', useHud);
   const feedsEl = document.getElementById('feeds');
   if (feedsEl) {
-    feedsEl.style.top = useHud ? '372px' : '';
+    feedsEl.style.top = useHud ? '290px' : '';
 
     if (feedsEl.classList.contains('has-hud') !== useHud) {
       feedsEl.classList.toggle('has-hud', useHud);
@@ -1356,7 +1360,7 @@ function renderMeter() {
     }
   }
 
-  const meterEl = document.getElementById('meter');
+  const meterEl = document.getElementById('meter');0
   meterEl.style.display = useHud ? 'none' : '';
   meterEl.parentElement.style.visibility =
     (!useHud && m.meterVisible === false) ? 'hidden' : 'visible';
@@ -1447,7 +1451,7 @@ function autoTick(now) {
   }
   if (!found) return;
 
-  if (wantRank && now - lastRankAt >= 250) {
+  if (wantRank && now - lastRankAt >= 500) {
     lastRankAt = now;
     updateRanks(values);
   }
@@ -1457,7 +1461,7 @@ function autoTick(now) {
   const max = Number(state.match.maxDiff) || 150000;
   const lead = diff > 0 ? 'right' : diff < 0 ? 'left' : '';
 
-  if (now - lastLabelAt >= 180) {
+  if (now - lastLabelAt >= 500) {
     lastLabelAt = now;
     const rounded = Math.round(diff);
     cachedLabel = state.match.labelStyle === 'full'

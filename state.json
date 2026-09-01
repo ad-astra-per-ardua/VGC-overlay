@@ -38,7 +38,7 @@
       {
         "title": "",
         "jacket": "",
-        "diff": "MXM",
+        "diff": "EXH",
         "level": "",
         "banned": false
       }
@@ -61,7 +61,7 @@
       {
         "title": "",
         "jacket": "",
-        "diff": "MXM",
+        "diff": "EXH",
         "level": "",
         "banned": false
       }
@@ -71,11 +71,11 @@
     "label": "",
     "meter": 0,
     "meterVisible": true,
-    "autoMeter": false,
-    "autoRank": false,
-    "combinedVideo": "",
+    "autoMeter": true,
+    "autoRank": true,
+    "combinedVideo": "/videos/match_3set.mp4",
     "maxDiff": 150000,
-    "labelStyle": "short",
+    "labelStyle": "full",
     "hudCrop": null,
     "badges": {
       "mode": "manual",
@@ -90,39 +90,81 @@
       {
         "rank": "1st",
         "team": "left",
-        "player": "",
+        "player": "1",
         "icon": "",
         "video": "",
-        "offsetMs": 0
+        "offsetMs": 0,
+        "timeline": "r3/match3.p1.scores.json",
+        "crop": {
+          "x": 0,
+          "y": 0,
+          "w": 25,
+          "h": 100
+        }
       },
       {
         "rank": "2nd",
         "team": "left",
-        "player": "",
+        "player": "2",
         "icon": "",
         "video": "",
-        "offsetMs": 0
+        "offsetMs": 0,
+        "timeline": "r3/match3.p2.scores.json",
+        "crop": {
+          "x": 25,
+          "y": 0,
+          "w": 25,
+          "h": 100
+        }
       },
       {
-        "rank": "3rd",
+        "rank": "",
         "team": "right",
         "player": "",
-        "icon": "",
-        "video": "",
-        "offsetMs": 0
+        "crop": {
+          "x": 50,
+          "y": 0,
+          "w": 25,
+          "h": 100
+        },
+        "timeline": "r3/match3.p3.scores.json"
       },
       {
-        "rank": "4th",
+        "rank": "",
         "team": "right",
         "player": "",
-        "icon": "",
-        "video": "",
-        "offsetMs": 0
+        "crop": {
+          "x": 75,
+          "y": 0,
+          "w": 25,
+          "h": 100
+        },
+        "timeline": "r3/match3.p4.scores.json"
       }
-    ]
+    ],
+    "songResetAt": 179.585652
   },
   "strategy": {
     "active": null,
-    "pool": []
+    "pool": [
+      {
+        "title": "",
+        "jacket": "",
+        "diff": "EXH",
+        "level": ""
+      },
+      {
+        "title": "",
+        "jacket": "",
+        "diff": "EXH",
+        "level": ""
+      },
+      {
+        "title": "",
+        "jacket": "",
+        "diff": "EXH",
+        "level": ""
+      }
+    ]
   }
 }

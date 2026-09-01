@@ -385,6 +385,10 @@ function renderSongs(side) {
     }
     strBtn.onclick = () => {
       if (isStrTarget) {
+        // 이미 진행 중인 곡의 배지를 다시 누르면 "취소" 로 동작합니다.
+        // 예전엔 startStrategy 를 다시 불러 phase 를 aim 으로 되돌렸는데,
+        // 그러면 오버레이 연출(카드)은 사라져도 active 는 그대로 남아
+        // 다른 곡들이 계속 "진행 중" 으로 잠긴 채였습니다.
         if (strAutoCloseTimer) { clearTimeout(strAutoCloseTimer); strAutoCloseTimer = null; }
         state.strategy.active = null;
         patch({ strategy: { active: null } });
@@ -458,6 +462,7 @@ function renderSlots() {
       if ($('hud-h')) $('hud-h').value = h.h;
     }
   }
+
 
   (state.match.slots || []).forEach((slot, i) => {
     const box = document.createElement('div');
@@ -829,6 +834,8 @@ function applyFormat(songsPerSide, playersPerTeam, note, hud) {
     slot.team = i < playersPerTeam ? 'left' : 'right';
   });
 
+  // R2(메가믹스)만 상단에 게임 HUD 띠를 쓰고, 다른 라운드로 바꾸면 꺼둡니다.
+  // 켤 때는 "상단 25% HUD + 아래 75% 좌우 2분할"을 기본값으로 잡습니다.
   if (hud) {
     s.forEach((slot, i) => {
       slot.crop = { x: (100 / total) * i, y: 25, w: 100 / total, h: 75 };
@@ -954,7 +961,7 @@ document.querySelectorAll('#str-choose button').forEach((btn) => {
       state.songs[act.side][act.index] = {
         title: picked.title, jacket: picked.jacket,
         diff: picked.diff, level: picked.level, banned: false,
-        strategyPick: true
+        strategyPick: true   // 이 곡이 STRATEGY 로 교체됐음을 곡 데이터 자체에 남김
       };
       pendingBans[act.side].delete(act.index);
 

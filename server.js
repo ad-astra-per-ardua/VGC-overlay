@@ -44,7 +44,7 @@ const DEFAULT_STATE = {
     combinedVideo: '', maxDiff: 150000, labelStyle: 'short',
     hudCrop: null,
     badges: { mode: 'auto', left: '', right: '' },
-    currentSide: '', currentSong: 0,
+    currentSide: '', currentSong: 0, songResetAt: null,
     slots: [
       { rank: '1st', team: 'left', player: '', icon: '', video: '', offsetMs: 0 },
       { rank: '2nd', team: 'left', player: '', icon: '', video: '', offsetMs: 0 },
@@ -75,7 +75,7 @@ function fillDefaults(cur, def) {
   return out;
 }
 let clients = [];
-let diag = { timelines: {}, at: 0 };   
+let diag = { timelines: {}, at: 0 };
 let saveTimer = null;
 
 const PRESET_DIR = path.join(ROOT, 'presets');
@@ -84,7 +84,7 @@ function presetPath(name) {
   if (typeof name !== 'string') return null;
   const clean = name.trim();
   if (!clean || clean.length > 60) return null;
-  
+
   if (/[\\/:*?"<>|]/.test(clean) || clean.includes('..') || /[\x00-\x1f]/.test(clean)) return null;
   return path.join(PRESET_DIR, clean + '.json');
 }
@@ -145,7 +145,7 @@ function readBody(req) {
 function serveStatic(req, res, pathname) {
   const rel = pathname === '/' ? '/control.html' : decodeURIComponent(pathname);
   const base = path.basename(rel);
-  
+
   const candidates = [
     path.join(ROOT, 'public', rel), path.join(ROOT, rel),
     path.join(ROOT, 'public', base), path.join(ROOT, base)
@@ -240,7 +240,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await readBody(req);
       fs.mkdirSync(PRESET_DIR, { recursive: true });
-      
+
       const tmp = file + '.tmp';
       fs.writeFileSync(tmp, JSON.stringify(body, null, 2));
       fs.renameSync(tmp, file);

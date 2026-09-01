@@ -18,6 +18,7 @@ CELL_H = 32
 SEARCH_MARGIN = 0.40
 MATCH_THRESHOLD = 0.45
 
+
 def load_config(path):
     with open(path, encoding='utf-8') as f:
         cfg = json.load(f)
@@ -27,6 +28,7 @@ def load_config(path):
     if 'players' not in cfg:
         cfg['players'] = [{'fields': cfg['fields']}]
     return cfg
+
 
 def field_strip(frame, field):
     x, y, w, h = field['x'], field['y'], field['w'], field['h']
@@ -50,6 +52,7 @@ def field_strip(frame, field):
                        interpolation=cv2.INTER_AREA)
     return strip
 
+
 def binarize_cell(cell):
     if cell.size == 0:
         return cell
@@ -64,16 +67,19 @@ def binarize_cell(cell):
     _, b = cv2.threshold(cell, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     return b
 
+
 def split_cells(strip, n):
     step = strip.shape[1] / n
     return [binarize_cell(strip[:, int(i * step):int((i + 1) * step)])
             for i in range(n)]
+
 
 def cell_window(strip, n, i):
     step = strip.shape[1] / n
     lo = max(0, int(i * step - step * SEARCH_MARGIN))
     hi = min(strip.shape[1], int((i + 1) * step + step * SEARCH_MARGIN))
     return binarize_cell(strip[:, lo:hi])
+
 
 def read_frame_at(video, seconds):
     cap = cv2.VideoCapture(video)
@@ -86,12 +92,14 @@ def read_frame_at(video, seconds):
         raise SystemExit(f'{seconds}s 지점에서 프레임을 읽지 못했습니다')
     return frame
 
+
 def cmd_frame(args):
     frame = read_frame_at(args.video, args.at)
     cv2.imwrite(args.out, frame)
     h, w = frame.shape[:2]
     print(f'{args.out} 저장 ({w}x{h})')
     print('그림판이나 이미지 뷰어로 열어 점수 영역의 x, y, w, h 를 확인하세요.')
+
 
 def cmd_learn(args):
     cfg = load_config(args.config)
@@ -133,6 +141,7 @@ def cmd_learn(args):
     else:
         print('모든 필드에 0~9 확보 완료. run 으로 넘어가세요.')
 
+
 def load_templates(path, field_index=0):
     tpl = {}
     path = os.path.join(path, f'f{field_index}')
@@ -152,6 +161,7 @@ def load_templates(path, field_index=0):
         print(f'경고: 템플릿 미보유 숫자 {"".join(missing)} - 오인식 가능', file=sys.stderr)
     return tpl
 
+
 def match_cell(window, templates):
     best_digit, best_score = None, -1.0
     for d, t in templates.items():
@@ -163,6 +173,7 @@ def match_cell(window, templates):
         if score > best_score:
             best_digit, best_score = d, score
     return best_digit, best_score
+
 
 def recognize_frame(frame, players, templates, threshold):
     out = []
@@ -180,6 +191,7 @@ def recognize_frame(frame, players, templates, threshold):
         out.append(None if conf_min < threshold else value)
     return out
 
+
 def open_video(path, hwaccel=False):
     if hwaccel:
         cap = cv2.VideoCapture(path, cv2.CAP_FFMPEG,
@@ -187,6 +199,7 @@ def open_video(path, hwaccel=False):
         if cap.isOpened():
             return cap
     return cv2.VideoCapture(path)
+
 
 def safe_workers(requested, width, height, hard_cap=None):
     if hard_cap is None:
@@ -208,6 +221,7 @@ def safe_workers(requested, width, height, hard_cap=None):
     fit = int(budget_mb // max(1, est_per_proc))
     return max(1, min(requested, hard_cap, fit))
 
+
 def run_range(video, cfg, templates, start_frame, end_frame, stride, src_fps,
               progress=None, hwaccel=False):
     cap = open_video(video, hwaccel)
@@ -227,7 +241,6 @@ def run_range(video, cfg, templates, start_frame, end_frame, stride, src_fps,
             try:
                 ok, frame = cap.retrieve()
             except cv2.error:
-
                 ok, frame = False, None
             if ok and frame is not None:
                 values = recognize_frame(frame, players, templates, MATCH_THRESHOLD)
@@ -238,14 +251,15 @@ def run_range(video, cfg, templates, start_frame, end_frame, stride, src_fps,
     cap.release()
     return samples
 
+
 def _worker(job):
     video, cfg, templates_dir, start, end, stride, src_fps, hwaccel = job
     templates = [load_templates(templates_dir, i)
                  for i in range(len(cfg['players'][0]['fields']))]
     return run_range(video, cfg, templates, start, end, stride, src_fps, hwaccel=hwaccel)
 
+
 def parse_timestamp(s):
-    """"mm:ss", "h:mm:ss", 또는 그냥 초(숫자)를 초 단위 float 로 변환."""
     raw = s
     s = str(s).strip()
     try:
@@ -262,17 +276,13 @@ def parse_timestamp(s):
 
 
 def load_breakpoints(raw, breaks_file):
-    """--breaks(JSON 문자열) 또는 --breaks-file(JSON 파일)에서 곡 전환 시각 목록을 읽습니다.
-
-    형식: ["01:30", "03:12", "04:50"] 처럼 mm:ss 문자열 배열이거나,
-    숫자(초) 배열이어도 됩니다. 두 형식을 섞어도 됩니다.
-    """
     text = raw
     if breaks_file:
-        with open(breaks_file, encoding='utf-8') as f:
+        with open(breaks_file, encoding='utf-8-sig') as f:
             text = f.read()
     if not text:
         return []
+    text = text.lstrip('\ufeff')
     try:
         data = json.loads(text)
     except json.JSONDecodeError as e:
@@ -281,6 +291,33 @@ def load_breakpoints(raw, breaks_file):
     if not isinstance(data, list):
         raise SystemExit('--breaks 는 ["01:30","03:12"] 같은 JSON 배열이어야 합니다')
     return [parse_timestamp(x) for x in data]
+
+
+def load_freezes(raw, freeze_file):
+    text = raw
+    if freeze_file:
+        with open(freeze_file, encoding='utf-8-sig') as f:
+            text = f.read()
+    if not text:
+        return []
+    text = text.lstrip('\ufeff')
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as e:
+        raise SystemExit(f'--freeze JSON 을 읽을 수 없습니다: {e}\n'
+                         f'  예: --freeze \'[["8:46","9:43"]]\'')
+    if not isinstance(data, list):
+        raise SystemExit('--freeze 는 [["8:46","9:43"]] 같은 [시작,끝] 쌍의 배열이어야 합니다')
+    out = []
+    for pair in data:
+        if not isinstance(pair, list) or len(pair) != 2:
+            raise SystemExit(f'--freeze 각 항목은 [시작,끝] 쌍이어야 합니다: {pair!r}')
+        a, b = parse_timestamp(pair[0]), parse_timestamp(pair[1])
+        if b <= a:
+            raise SystemExit(f'--freeze 구간의 끝이 시작보다 뒤여야 합니다: {pair!r}')
+        out.append((a, b))
+    out.sort()
+    return out
 
 
 def cmd_run(args):
@@ -295,16 +332,26 @@ def cmd_run(args):
     if not cap.isOpened():
         raise SystemExit(f'영상을 열 수 없습니다: {args.video}')
     src_fps = cap.get(cv2.CAP_PROP_FPS) or 60.0
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
     vw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
     vh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
     cap.release()
     stride = max(1, round(src_fps / cfg['fps']))
 
+    start_sec = parse_timestamp(args.start) if args.start else 0.0
+    end_sec = parse_timestamp(args.end) if args.end else None
+    start_frame = max(0, round(start_sec * src_fps))
+    end_frame = total_frames if end_sec is None else min(total_frames, round(end_sec * src_fps))
+    if start_frame >= end_frame and total_frames > 0:
+        raise SystemExit(f'--start({start_sec:g}s) 가 --end({end_sec}s) 보다 뒤입니다.')
+    total = end_frame - start_frame
+    if start_frame > 0 or end_frame != total_frames:
+        print(f'구간 제한: {start_sec:g}s ~ {"영상 끝" if end_sec is None else f"{end_sec:g}s"} '
+              f'(프레임 {start_frame}~{end_frame})', file=sys.stderr)
+
     explicit = args.workers > 0
     requested = args.workers if explicit else (os.cpu_count() or 1)
     if explicit:
-
         workers = max(1, requested)
         advised = safe_workers(requested, vw, vh)
         if workers > advised:
@@ -316,13 +363,12 @@ def cmd_run(args):
             print(f'해상도 {vw}x{vh} 라 워커를 {requested} -> {workers} 개로 정했습니다 '
                   f'(여유 메모리 기준. --workers 로 직접 지정 가능)', file=sys.stderr)
     if workers > 1 and total > 0:
-
         import multiprocessing as mp
         per = ((total // workers) // stride + 1) * stride
         jobs = []
-        s = 0
-        while s < total:
-            e = min(total, s + per)
+        s = start_frame
+        while s < end_frame:
+            e = min(end_frame, s + per)
             jobs.append((args.video, cfg, args.templates, s, e, stride, src_fps, args.hwaccel))
             s = e
         print(f'{len(jobs)}개 구간을 {workers}개 프로세스로 병렬 처리', file=sys.stderr)
@@ -332,24 +378,40 @@ def cmd_run(args):
         samples.sort(key=lambda x: x[0])
     else:
         templates = [load_templates(args.templates, i) for i in range(n_fields)]
-        done = [0]
+
         def progress(idx):
             if total:
-                print(f'\r{idx}/{total}  ({idx * 100 // total}%)', end='', file=sys.stderr)
-        samples = run_range(args.video, cfg, templates, 0, total or 1 << 62,
+                done = idx - start_frame
+                print(f'\r{done}/{total}  ({done * 100 // total}%)', end='', file=sys.stderr)
+
+        samples = run_range(args.video, cfg, templates, start_frame, end_frame or 1 << 62,
                             stride, src_fps, progress, hwaccel=args.hwaccel)
         print('', file=sys.stderr)
 
     breakpoints = load_breakpoints(args.breaks, args.breaks_file)
     if breakpoints:
-        pretty = ', '.join(f'{b/60:.0f}:{b%60:05.2f}' for b in breakpoints)
+        def fmt_mmss(b):
+            m, s = divmod(round(b, 2), 60)
+            return f'{int(m)}:{s:05.2f}'
+
+        pretty = ', '.join(fmt_mmss(b) for b in breakpoints)
         print(f'곡 전환 지점 {len(breakpoints)}개 적용: {pretty}', file=sys.stderr)
+
+    freezes = load_freezes(args.freeze, args.freeze_file)
+    if freezes:
+        def fmt_mmss(b):
+            m, s = divmod(round(b, 2), 60)
+            return f'{int(m)}:{s:05.2f}'
+
+        pretty = ', '.join(f'{fmt_mmss(a)}~{fmt_mmss(b)}' for a, b in freezes)
+        print(f'무시 구간 {len(freezes)}개 적용: {pretty}', file=sys.stderr)
 
     multi = len(players) > 1
     for pi in range(len(players)):
         per_player = [(t, vs[pi]) for t, vs in samples]
         weak = sum(1 for _, v in per_player if v is None)
-        cleaned = postprocess(per_player, cfg['max_score'], breakpoints)
+        cleaned = postprocess(per_player, cfg['max_score'], breakpoints, freezes,
+                              fps=cfg['fps'], max_rate_per_sec=5_000_000)
         out_path = player_out_path(args.out, pi, multi)
         out_dir = os.path.dirname(os.path.abspath(out_path))
         if not os.path.isdir(out_dir):
@@ -388,6 +450,7 @@ def cmd_run(args):
                     print(f'    {si + 1}번곡: 최종 {seg[-1]:,}')
     print('최종 점수가 리절트 화면과 다르면 ROI 좌표를 다시 잡으세요.')
 
+
 def player_out_path(out, pi, multi):
     if not multi:
         return out
@@ -397,6 +460,7 @@ def player_out_path(out, pi, multi):
             base = out[:-len(suffix)]
             return f'{base}.p{pi + 1}{suffix}'
     return f'{out}.p{pi + 1}'
+
 
 def cmd_check(args):
     cfg = load_config(args.config)
@@ -435,6 +499,7 @@ def cmd_check(args):
                 cv2.imwrite(path, strip)
         print(f'\n잘라낸 점수 영역을 {args.dump}/ 에 저장했습니다. 눈으로 확인해 보세요.')
 
+
 def cmd_scan(args):
     cfg = load_config(args.config)
     players = cfg['players']
@@ -451,7 +516,7 @@ def cmd_scan(args):
     end = args.end if args.end > 0 else dur
 
     print(f'{args.start:g}~{end:g}초를 {args.step:g}초 간격으로 확인합니다\n')
-    print(f'{"시각":>8} | ' + ' | '.join(f'{i+1}번'.rjust(12) for i in range(len(players))))
+    print(f'{"시각":>8} | ' + ' | '.join(f'{i + 1}번'.rjust(12) for i in range(len(players))))
     print('-' * (10 + 15 * len(players)))
 
     last_ok = [None] * len(players)
@@ -479,26 +544,33 @@ def cmd_scan(args):
             print(f'  {i + 1}번: 한 번도 성공하지 못했습니다')
     print('\n특정 선수만 일찍 끊긴다면 그 시점을 --at 으로 check 해 보세요.')
 
-def postprocess(samples, max_score, breakpoints=None):
-    """SDVX 점수는 곡 하나 안에서는 단조 증가한다는 제약으로 오인식을 걸러냅니다.
 
-    한 영상에 곡이 여러 개 이어 붙은 경우(예: 1라운드 4곡), breakpoints 로
-    넘긴 시각(초)마다 "여기서부터 새 곡" 으로 보고 단조 증가 기준을 리셋합니다.
-    그 시각이 아닌 곳에서 값이 내려가는 건 여전히 오인식으로 간주해 막습니다.
-    """
+def postprocess(samples, max_score, breakpoints=None, freezes=None, fps=20, max_rate_per_sec=None):
     out = []
     last = 0
     bps = sorted(breakpoints or [])
     bi = 0
+    frz = sorted(freezes or [])
+    fi = 0
+    frame_dt = 1.0 / fps if fps else 0.05
+    max_jump = (max_rate_per_sec * frame_dt) if max_rate_per_sec else None
     for t, v in samples:
         while bi < len(bps) and t >= bps[bi]:
             last = 0
             bi += 1
-        if v is None or v < last or v > max_score:
+        while fi < len(frz) and t >= frz[fi][1]:
+            fi += 1
+        frozen = fi < len(frz) and frz[fi][0] <= t < frz[fi][1]
+        if frozen:
+            v = last
+        elif v is None or v < last or v > max_score:
+            v = last
+        elif max_jump is not None and (v - last) > max_jump:
             v = last
         last = v
         out.append([round(t, 3), v])
     return out
+
 
 def main():
     p = argparse.ArgumentParser(description='SDVX 녹화본 점수 추출')
@@ -532,6 +604,17 @@ def main():
                         '예: --breaks \'["01:30","03:12","04:50"]\' (mm:ss 또는 초 단위 숫자)')
     r.add_argument('--breaks-file', default='',
                    help='--breaks 를 파일로 줄 때. 파일 내용은 위와 같은 JSON 배열')
+    r.add_argument('--freeze', default='',
+                   help='이 구간 동안은 값을 무시하고 직전 값을 유지합니다(곡 종료~다음 곡 시작 '
+                        '사이 무음/전환 구간용). [시작,끝] 쌍의 JSON 배열. '
+                        '예: --freeze \'[["8:46","9:43"]]\'')
+    r.add_argument('--freeze-file', default='',
+                   help='--freeze 를 파일로 줄 때. 파일 내용은 위와 같은 JSON 배열')
+    r.add_argument('--start', default='',
+                   help='이 시각부터만 인식합니다(mm:ss 또는 초). 화면 소스가 중간에 바뀌는 '
+                        '선수를 구간별로 따로 돌릴 때 씁니다. 기본은 영상 처음부터.')
+    r.add_argument('--end', default='',
+                   help='이 시각까지만 인식합니다(mm:ss 또는 초). 기본은 영상 끝까지.')
     r.set_defaults(func=cmd_run)
 
     c = sub.add_parser('check', help='특정 시점의 인식 결과를 자릿수별로 확인')
@@ -555,6 +638,7 @@ def main():
 
     args = p.parse_args()
     args.func(args)
+
 
 if __name__ == '__main__':
     main()
