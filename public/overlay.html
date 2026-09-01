@@ -949,7 +949,6 @@ function renderPicks(animate) {
   });
 }
 
-const videoEls = new Map();
 const timelines = new Map();
 const timelineSrc = new Map();
 
@@ -957,10 +956,6 @@ let combinedVideo = null;
 let combinedSrc = '';
 let combinedRAF = null;
 const canvasEls = new Map();
-
-function isCombinedMode() {
-  return !!(state && state.match && state.match.combinedVideo);
-}
 
 const cursor = new Int32Array(32);
 
@@ -1038,7 +1033,6 @@ function scoreAtSmooth(i, time) {
 function renderFeeds() {
   const wrap = document.getElementById('feeds');
   const slots = asArray(state.match && state.match.slots);
-  const combined = isCombinedMode();
 
   const cols = String(slots.length || 4);
   if (wrap.dataset.cols !== cols) {
@@ -1046,10 +1040,8 @@ function renderFeeds() {
     wrap.style.setProperty('--feed-cols', cols);
   }
 
-  if (wrap.children.length !== slots.length || wrap.dataset.mode !== (combined ? 'combined' : 'split')) {
+  if (wrap.children.length !== slots.length) {
     wrap.innerHTML = '';
-    wrap.dataset.mode = combined ? 'combined' : 'split';
-    videoEls.forEach((v) => v.remove()); videoEls.clear();
     canvasEls.clear();
 
     [...timelines.keys()].forEach((k) => { if (k >= slots.length) timelines.delete(k); });
@@ -1087,38 +1079,7 @@ function renderFeeds() {
     if (avatarEl.dataset.bg !== bg) { avatarEl.dataset.bg = bg; avatarEl.style.backgroundImage = bg; }
   });
 
-  if (combined) renderCombinedFeeds(slots);
-  else renderSplitFeeds(slots);
-}
-
-function renderSplitFeeds(slots) {
-  const wrap = document.getElementById('feeds');
-  slots.forEach((slot, i) => {
-    const feed = wrap.children[i];
-    const frame = feed.querySelector('.frame');
-    const placeholder = frame.querySelector('.placeholder');
-    let video = videoEls.get(i);
-
-    if (slot.video) {
-      if (!video) {
-        video = document.createElement('video');
-        video.muted = true;
-        video.playsInline = true;
-        video.preload = 'auto';
-        frame.insertBefore(video, placeholder.nextSibling);
-        videoEls.set(i, video);
-      }
-      if (video.dataset.src !== slot.video) {
-        video.dataset.src = slot.video;
-        video.src = slot.video;
-        video.load();
-      }
-      placeholder.style.display = 'none';
-    } else {
-      if (video) { video.remove(); videoEls.delete(i); }
-      placeholder.style.display = '';
-    }
-  });
+  renderCombinedFeeds(slots);
 }
 
 function renderCombinedFeeds(slots) {
@@ -1200,7 +1161,7 @@ function buildDrawPlan() {
 
 function drawCombinedFrame() {
   combinedRAF = requestAnimationFrame(drawCombinedFrame);
-  if (!isCombinedMode() || !combinedVideo || !combinedVideo.videoWidth) return;
+  if (!combinedVideo || !combinedVideo.videoWidth) return;
 
   const t = combinedVideo.currentTime;
   if (t === lastDrawnTime) return;
@@ -1341,7 +1302,7 @@ function renderBadges() {
 function renderMeter() {
   const m = state.match || {};
 
-  const useHud = !!m.hudCrop && isCombinedMode();
+  const useHud = !!m.hudCrop && !!m.combinedVideo;
   const hudEl = document.getElementById('hud-banner');
   if (hudEl && hudEl.classList.contains('on') !== useHud) {
     hudEl.classList.toggle('on', useHud);
@@ -1360,7 +1321,7 @@ function renderMeter() {
     }
   }
 
-  const meterEl = document.getElementById('meter');0
+  const meterEl = document.getElementById('meter');
   meterEl.style.display = useHud ? 'none' : '';
   meterEl.parentElement.style.visibility =
     (!useHud && m.meterVisible === false) ? 'hidden' : 'visible';
@@ -1421,15 +1382,11 @@ function autoTick(now) {
   if (!wantMeter && !wantRank) return;
 
   const slots = asArray(state.match && state.match.slots);
-  const master = isCombinedMode() ? combinedVideo : videoEls.get(0);
-  if (!master || !slots.length) return;
+  if (!combinedVideo || !slots.length) return;
 
-  const mt = master.currentTime;
+  const mt = combinedVideo.currentTime;
   if (mt === lastTickTime) return;
   lastTickTime = mt;
-
-  const combined = isCombinedMode();
-  const base = combined ? mt : mt - (Number(slots[0].offsetMs) || 0) / 1000;
 
   const resetAt = state.match.songResetAt;
   const useReset = Number.isFinite(resetAt) && resetAt >= 0;
@@ -1438,8 +1395,7 @@ function autoTick(now) {
   let left = 0, right = 0, found = false;
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i];
-    const t = combined ? base : base + (Number(slot.offsetMs) || 0) / 1000;
-    let v = scoreAtSmooth(i, t);
+    let v = scoreAtSmooth(i, mt);
     if (v != null && useReset) {
       const base0 = scoreAtSmooth(i, resetAt);
       if (base0 != null) v = Math.max(0, v - base0);
@@ -1490,19 +1446,11 @@ function render() {
 }
 
 function seekAll(t) {
-  if (isCombinedMode()) {
-    if (combinedVideo) combinedVideo.currentTime = Math.max(0, t);
-    return;
-  }
-  const slots = asArray(state.match && state.match.slots);
-  videoEls.forEach((video, i) => {
-    const offset = (slots[i] && Number(slots[i].offsetMs)) || 0;
-    video.currentTime = Math.max(0, t + offset / 1000);
-  });
+  if (combinedVideo) combinedVideo.currentTime = Math.max(0, t);
 }
 
 function allVideos() {
-  return isCombinedMode() ? (combinedVideo ? [combinedVideo] : []) : [...videoEls.values()];
+  return combinedVideo ? [combinedVideo] : [];
 }
 
 function handleCmd(cmd) {
@@ -1530,8 +1478,7 @@ function handleCmd(cmd) {
       renderStrategy();
       break;
     case 'songReset': {
-      const master = isCombinedMode() ? combinedVideo : videoEls.get(0);
-      const at = master ? master.currentTime : 0;
+      const at = combinedVideo ? combinedVideo.currentTime : 0;
       fetch('/api/state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
