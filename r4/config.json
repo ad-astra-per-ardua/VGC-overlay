@@ -1,0 +1,48 @@
+{
+  "players": [
+    {
+      "fields": [
+        {
+          "x": 700,
+          "y": 126,
+          "w": 205,
+          "h": 48,
+          "digits": 4,
+          "weight": 10000,
+          "fixed_leading_zero": true
+        },
+        {
+          "x": 899,
+          "y": 146,
+          "w": 148,
+          "h": 34,
+          "digits": 4,
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "fields": [
+        {
+          "x": 1780,
+          "y": 137,
+          "w": 218,
+          "h": 53,
+          "digits": 4,
+          "weight": 10000,
+          "fixed_leading_zero": true
+        },
+        {
+          "x": 1985,
+          "y": 155,
+          "w": 148,
+          "h": 40,
+          "digits": 4,
+          "weight": 1
+        }
+      ]
+    }
+  ],
+  "fps": 20,
+  "max_score": 10000000
+}
