@@ -57,6 +57,9 @@ def main():
     ap.add_argument('--video', required=True)
     ap.add_argument('--config', required=True)
     ap.add_argument('--templates', default='templates')
+    ap.add_argument('--player', type=int, default=1,
+                    help='몇 번째 선수 좌표에서 학습할지 (1부터 시작, 기본 1). '
+                         '선수마다 폰트 크기가 달라 템플릿을 따로 만들어야 할 때 씁니다.')
     ap.add_argument('--pairs', default='')
     ap.add_argument('--pairs-file', default='')
     ap.add_argument('--overwrite', action='store_true',
@@ -72,10 +75,14 @@ def main():
         raise SystemExit('학습할 "시각=점수" 항목이 없습니다.')
 
     cfg = load_cfg(args.config)
-    n_fields = len(cfg['players'][0]['fields'])
-    total_digits = sum(f['digits'] for f in cfg['players'][0]['fields'])
+    if args.player < 1 or args.player > len(cfg['players']):
+        raise SystemExit(f'--player 는 1~{len(cfg["players"])} 사이여야 합니다')
+    player_fields = cfg['players'][args.player - 1]['fields']
+    n_fields = len(player_fields)
+    total_digits = sum(f['digits'] for f in player_fields)
 
-    print(f'{len(pairs)}개 항목으로 학습을 시작합니다 (필드 {n_fields}개, {total_digits}자리)\n')
+    player_note = f', {args.player}번 선수 좌표' if args.player != 1 else ''
+    print(f'{len(pairs)}개 항목으로 학습을 시작합니다 (필드 {n_fields}개, {total_digits}자리{player_note})\n')
 
     child_env = dict(os.environ, PYTHONIOENCODING='utf-8')
     tmpdir = tempfile.mkdtemp(prefix='batchlearn_')
@@ -102,7 +109,7 @@ def main():
 
         cmd = [sys.executable, SCRIPT, 'learn', '--frame', frame_path,
                '--config', args.config, '--templates', args.templates,
-               '--digits', digits]
+               '--player', str(args.player), '--digits', digits]
         if args.overwrite:
             cmd.append('--overwrite')
         r = subprocess.run(cmd, env=child_env, capture_output=True, text=True,

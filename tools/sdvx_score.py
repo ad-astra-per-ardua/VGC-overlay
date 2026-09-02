@@ -16,7 +16,7 @@ except Exception:
 
 CELL_H = 32
 SEARCH_MARGIN = 0.40
-MATCH_THRESHOLD = 0.45
+MATCH_THRESHOLD = 0.35
 
 
 def load_config(path):
@@ -74,10 +74,10 @@ def split_cells(strip, n):
             for i in range(n)]
 
 
-def cell_window(strip, n, i):
+def cell_window(strip, n, i, margin=SEARCH_MARGIN):
     step = strip.shape[1] / n
-    lo = max(0, int(i * step - step * SEARCH_MARGIN))
-    hi = min(strip.shape[1], int((i + 1) * step + step * SEARCH_MARGIN))
+    lo = max(0, int(i * step - step * margin))
+    hi = min(strip.shape[1], int((i + 1) * step + step * margin))
     return binarize_cell(strip[:, lo:hi])
 
 
@@ -107,7 +107,9 @@ def cmd_learn(args):
     if frame is None:
         raise SystemExit(f'이미지를 열 수 없습니다: {args.frame}')
 
-    fields = cfg['players'][0]['fields']
+    if args.player < 1 or args.player > len(cfg['players']):
+        raise SystemExit(f'--player 는 1~{len(cfg["players"])} 사이여야 합니다')
+    fields = cfg['players'][args.player - 1]['fields']
     total_digits = sum(f['digits'] for f in fields)
     digits = args.digits.strip()
     if len(digits) != total_digits:
@@ -145,15 +147,23 @@ def cmd_learn(args):
 def load_templates(path, field_index=0):
     tpl = {}
     path = os.path.join(path, f'f{field_index}')
-    for d in '0123456789':
-        p = os.path.join(path, f'{d}.png')
-        if os.path.exists(p):
-            img = cv2.imread(p, cv2.IMREAD_GRAYSCALE)
-            if img.shape[0] != CELL_H:
-                sc = CELL_H / img.shape[0]
-                img = cv2.resize(img, (max(1, round(img.shape[1] * sc)), CELL_H),
-                                 interpolation=cv2.INTER_AREA)
-            tpl[d] = img
+    if not os.path.isdir(path):
+        raise SystemExit(f'템플릿이 없습니다: {path} - learn 을 먼저 실행하세요')
+    for fname in sorted(os.listdir(path)):
+        if not fname.lower().endswith('.png'):
+            continue
+        d = fname[0]
+        if d not in '0123456789':
+            continue
+        p = os.path.join(path, fname)
+        img = cv2.imread(p, cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            continue
+        if img.shape[0] != CELL_H:
+            sc = CELL_H / img.shape[0]
+            img = cv2.resize(img, (max(1, round(img.shape[1] * sc)), CELL_H),
+                             interpolation=cv2.INTER_AREA)
+        tpl.setdefault(d, []).append(img)
     if not tpl:
         raise SystemExit(f'템플릿이 없습니다: {path} - learn 을 먼저 실행하세요')
     missing = [d for d in '0123456789' if d not in tpl]
@@ -162,28 +172,41 @@ def load_templates(path, field_index=0):
     return tpl
 
 
-def match_cell(window, templates):
-    best_digit, best_score = None, -1.0
-    for d, t in templates.items():
-        win = window
-        if win.shape[1] < t.shape[1]:
-            pad = t.shape[1] - win.shape[1]
-            win = cv2.copyMakeBorder(win, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=0)
-        score = float(cv2.matchTemplate(win, t, cv2.TM_CCOEFF_NORMED).max())
-        if score > best_score:
-            best_digit, best_score = d, score
-    return best_digit, best_score
+def match_cell(window, templates, offset_penalty=0.5, one_penalty=0.15):
+    best_digit, best_rank_score, best_raw_score = None, -1e9, -1.0
+    for d, variants in templates.items():
+        for t in variants:
+            win = window
+            if win.shape[1] < t.shape[1]:
+                pad = t.shape[1] - win.shape[1]
+                win = cv2.copyMakeBorder(win, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=0)
+            result = cv2.matchTemplate(win, t, cv2.TM_CCOEFF_NORMED)
+            _, raw_score, _, loc = cv2.minMaxLoc(result)
+            x, _ = loc
+            match_center = x + t.shape[1] / 2
+            offset_norm = abs(match_center - win.shape[1] / 2) / win.shape[1]
+            rank_score = raw_score - offset_norm * offset_penalty
+            if d == '1':
+                rank_score -= one_penalty
+            if rank_score > best_rank_score:
+                best_digit, best_rank_score, best_raw_score = d, rank_score, raw_score
+    return best_digit, best_raw_score
 
 
-def recognize_frame(frame, players, templates, threshold):
+def recognize_frame(frame, players, templates_per_player, threshold):
     out = []
-    for p in players:
+    for pi, p in enumerate(players):
+        templates = templates_per_player[pi]
         value, conf_min = 0, 1.0
         for fi, field in enumerate(p['fields']):
             n = field['digits']
+            fixed0 = field.get('fixed_leading_zero', False)
             strip = field_strip(frame, field)
             part = 0
             for i in range(n):
+                if fixed0 and i == 0:
+                    part = part * 10
+                    continue
                 d, conf = match_cell(cell_window(strip, n, i), templates[fi])
                 conf_min = min(conf_min, conf)
                 part = part * 10 + int(d)
@@ -222,7 +245,7 @@ def safe_workers(requested, width, height, hard_cap=None):
     return max(1, min(requested, hard_cap, fit))
 
 
-def run_range(video, cfg, templates, start_frame, end_frame, stride, src_fps,
+def run_range(video, cfg, templates_per_player, start_frame, end_frame, stride, src_fps,
               progress=None, hwaccel=False):
     cap = open_video(video, hwaccel)
     if not cap.isOpened():
@@ -243,7 +266,7 @@ def run_range(video, cfg, templates, start_frame, end_frame, stride, src_fps,
             except cv2.error:
                 ok, frame = False, None
             if ok and frame is not None:
-                values = recognize_frame(frame, players, templates, MATCH_THRESHOLD)
+                values = recognize_frame(frame, players, templates_per_player, MATCH_THRESHOLD)
                 samples.append((idx / src_fps, values))
         idx += 1
         if progress and idx % (stride * 50) == 0:
@@ -253,10 +276,10 @@ def run_range(video, cfg, templates, start_frame, end_frame, stride, src_fps,
 
 
 def _worker(job):
-    video, cfg, templates_dir, start, end, stride, src_fps, hwaccel = job
-    templates = [load_templates(templates_dir, i)
-                 for i in range(len(cfg['players'][0]['fields']))]
-    return run_range(video, cfg, templates, start, end, stride, src_fps, hwaccel=hwaccel)
+    video, cfg, template_dirs, start, end, stride, src_fps, hwaccel = job
+    n_fields = len(cfg['players'][0]['fields'])
+    templates_per_player = load_templates_per_player(template_dirs, n_fields)
+    return run_range(video, cfg, templates_per_player, start, end, stride, src_fps, hwaccel=hwaccel)
 
 
 def parse_timestamp(s):
@@ -320,6 +343,29 @@ def load_freezes(raw, freeze_file):
     return out
 
 
+def resolve_template_dirs(templates_dir, player_templates_json, n_players, player_templates_file=''):
+    text = player_templates_json
+    if player_templates_file:
+        with open(player_templates_file, encoding='utf-8-sig') as f:
+            text = f.read()
+    if not text:
+        return [templates_dir] * n_players
+    text = text.lstrip('\ufeff')
+    try:
+        dirs = json.loads(text)
+    except json.JSONDecodeError as e:
+        raise SystemExit(f'--player-templates JSON 을 읽을 수 없습니다: {e}\n'
+                         f'  예: --player-templates \'["r4/templates_p1","r4/templates_p2"]\'')
+    if not isinstance(dirs, list) or len(dirs) != n_players:
+        raise SystemExit(f'--player-templates 는 선수 수({n_players})와 같은 길이의 배열이어야 합니다 '
+                         f'(지금 선수 수: {n_players})')
+    return dirs
+
+
+def load_templates_per_player(template_dirs, n_fields):
+    return [[load_templates(d, fi) for fi in range(n_fields)] for d in template_dirs]
+
+
 def cmd_run(args):
     cfg = load_config(args.config)
     players = cfg['players']
@@ -327,6 +373,10 @@ def cmd_run(args):
     for p in players:
         if len(p['fields']) != n_fields:
             raise SystemExit('모든 플레이어의 fields 개수가 같아야 합니다 (템플릿 공유)')
+
+    template_dirs = resolve_template_dirs(args.templates, args.player_templates, len(players), args.player_templates_file)
+    if args.player_templates:
+        print(f'선수별 템플릿 적용: {template_dirs}', file=sys.stderr)
 
     cap = open_video(args.video, hwaccel=args.hwaccel)
     if not cap.isOpened():
@@ -369,7 +419,7 @@ def cmd_run(args):
         s = start_frame
         while s < end_frame:
             e = min(end_frame, s + per)
-            jobs.append((args.video, cfg, args.templates, s, e, stride, src_fps, args.hwaccel))
+            jobs.append((args.video, cfg, template_dirs, s, e, stride, src_fps, args.hwaccel))
             s = e
         print(f'{len(jobs)}개 구간을 {workers}개 프로세스로 병렬 처리', file=sys.stderr)
         with mp.Pool(workers) as pool:
@@ -377,14 +427,14 @@ def cmd_run(args):
         samples = [x for chunk in chunks for x in chunk]
         samples.sort(key=lambda x: x[0])
     else:
-        templates = [load_templates(args.templates, i) for i in range(n_fields)]
+        templates_per_player = load_templates_per_player(template_dirs, n_fields)
 
         def progress(idx):
             if total:
                 done = idx - start_frame
                 print(f'\r{done}/{total}  ({done * 100 // total}%)', end='', file=sys.stderr)
 
-        samples = run_range(args.video, cfg, templates, start_frame, end_frame or 1 << 62,
+        samples = run_range(args.video, cfg, templates_per_player, start_frame, end_frame or 1 << 62,
                             stride, src_fps, progress, hwaccel=args.hwaccel)
         print('', file=sys.stderr)
 
@@ -465,21 +515,28 @@ def player_out_path(out, pi, multi):
 def cmd_check(args):
     cfg = load_config(args.config)
     players = cfg['players']
-    templates = [load_templates(args.templates, i)
-                 for i in range(len(players[0]['fields']))]
+    n_fields = len(players[0]['fields'])
+    template_dirs = resolve_template_dirs(args.templates, args.player_templates, len(players), args.player_templates_file)
+    templates_per_player = load_templates_per_player(template_dirs, n_fields)
     frame = read_frame_at(args.video, args.at)
     if frame is None:
         raise SystemExit(f'{args.at}초 프레임을 읽지 못했습니다')
 
     print(f'=== {args.at}초 ===')
     for pi, p in enumerate(players):
+        templates = templates_per_player[pi]
         parts, conf_min, digits_txt = [], 1.0, []
         value = 0
         for fi, field in enumerate(p['fields']):
             n = field['digits']
+            fixed0 = field.get('fixed_leading_zero', False)
             strip = field_strip(frame, field)
             part = 0
             for i in range(n):
+                if fixed0 and i == 0:
+                    digits_txt.append('0(고정)')
+                    part = part * 10
+                    continue
                 d, conf = match_cell(cell_window(strip, n, i), templates[fi])
                 conf_min = min(conf_min, conf)
                 digits_txt.append(f'{d}({conf:.2f})')
@@ -503,8 +560,9 @@ def cmd_check(args):
 def cmd_scan(args):
     cfg = load_config(args.config)
     players = cfg['players']
-    templates = [load_templates(args.templates, i)
-                 for i in range(len(players[0]['fields']))]
+    n_fields = len(players[0]['fields'])
+    template_dirs = resolve_template_dirs(args.templates, args.player_templates, len(players), args.player_templates_file)
+    templates_per_player = load_templates_per_player(template_dirs, n_fields)
 
     cap = open_video(args.video)
     if not cap.isOpened():
@@ -525,7 +583,7 @@ def cmd_scan(args):
         frame = read_frame_at(args.video, t)
         if frame is None:
             break
-        vals = recognize_frame(frame, players, templates, args.threshold)
+        vals = recognize_frame(frame, players, templates_per_player, args.threshold)
         cells = []
         for i, v in enumerate(vals):
             if v is None:
@@ -565,7 +623,7 @@ def postprocess(samples, max_score, breakpoints=None, freezes=None, fps=20, max_
             v = last
         elif v is None or v < last or v > max_score:
             v = last
-        elif max_jump is not None and (v - last) > max_jump:
+        elif max_jump is not None and last > 0 and (v - last) > max_jump:
             v = last
         last = v
         out.append([round(t, 3), v])
@@ -587,6 +645,9 @@ def main():
     l.add_argument('--config', required=True)
     l.add_argument('--digits', required=True, help='그 프레임의 실제 점수 (예: 01704523)')
     l.add_argument('--templates', default='templates')
+    l.add_argument('--player', type=int, default=1,
+                   help='몇 번째 선수 좌표에서 학습할지 (1부터 시작, 기본 1). '
+                        '선수마다 폰트 크기가 다른 경우 --player-templates 와 함께 씁니다.')
     l.add_argument('--overwrite', action='store_true')
     l.set_defaults(func=cmd_learn)
 
@@ -594,6 +655,15 @@ def main():
     r.add_argument('--video', required=True)
     r.add_argument('--config', required=True)
     r.add_argument('--templates', default='templates')
+    r.add_argument('--player-templates', default='',
+                   help='선수마다 폰트 크기/모양이 달라 템플릿을 따로 써야 할 때. 선수 수와 같은 '
+                        '길이의 JSON 배열로 폴더 경로를 나열합니다. 예: '
+                        '--player-templates \'["r4/templates_p1","r4/templates_p2"]\'. '
+                        '지정하면 --templates 는 무시됩니다.')
+    r.add_argument('--player-templates-file', default='',
+                   help='--player-templates 를 파일로 줄 때. 파일 내용은 위와 같은 JSON 배열. '
+                        'PowerShell 따옴표 문제를 피하려면 이 방식을 권장합니다: '
+                        '\'["r4/templates_p1","r4/templates_p2"]\' | Out-File -Encoding utf8 r4\\pt.json')
     r.add_argument('--out', required=True)
     r.add_argument('--workers', type=int, default=0,
                    help='병렬 프로세스 수 (기본 0 = 자동. 해상도에 맞춰 메모리 한도 안에서 정합니다)')
@@ -621,6 +691,10 @@ def main():
     c.add_argument('--video', required=True)
     c.add_argument('--config', required=True)
     c.add_argument('--templates', default='templates')
+    c.add_argument('--player-templates', default='',
+                   help='run 과 동일. 선수 수와 같은 길이의 JSON 배열로 템플릿 폴더 경로 나열')
+    c.add_argument('--player-templates-file', default='',
+                   help='--player-templates 를 파일로 줄 때 (PowerShell 따옴표 문제 회피용)')
     c.add_argument('--at', type=float, required=True, help='확인할 시각(초)')
     c.add_argument('--threshold', type=float, default=MATCH_THRESHOLD)
     c.add_argument('--dump', default='', help='잘라낸 점수 영역을 저장할 폴더')
@@ -630,6 +704,10 @@ def main():
     sc.add_argument('--video', required=True)
     sc.add_argument('--config', required=True)
     sc.add_argument('--templates', default='templates')
+    sc.add_argument('--player-templates', default='',
+                   help='run 과 동일. 선수 수와 같은 길이의 JSON 배열로 템플릿 폴더 경로 나열')
+    sc.add_argument('--player-templates-file', default='',
+                   help='--player-templates 를 파일로 줄 때 (PowerShell 따옴표 문제 회피용)')
     sc.add_argument('--start', type=float, default=0.0)
     sc.add_argument('--end', type=float, default=0.0, help='0 이면 영상 끝까지')
     sc.add_argument('--step', type=float, default=10.0)

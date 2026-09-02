@@ -1,0 +1,27 @@
+# 의존성
+node_modules/
+package-lock.json
+
+# 영상 원본
+videos/
+*.mp4
+*.mkv
+
+# IDE
+.idea/
+.vscode/
+
+# 작업 산출물
+crops/
+**/dbg*/
+**/debug*/
+sheet*.png
+frame*.png
+src*.png
+chk*.png
+test_run*.json
+
+# 압축/임시
+*.zip
+__pycache__/
+*.pyc

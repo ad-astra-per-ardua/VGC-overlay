@@ -13,6 +13,7 @@ try:
 except Exception:
     pass
 
+
 def load_cfg(path):
     with open(path, encoding='utf-8') as f:
         cfg = json.load(f)
@@ -20,10 +21,13 @@ def load_cfg(path):
         cfg['players'] = [{'fields': cfg['fields']}]
     return cfg
 
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--video', required=True)
     ap.add_argument('--config', required=True)
+    ap.add_argument('--player', type=int, default=1,
+                    help='몇 번째 선수 좌표를 시트로 뽑을지 (1부터 시작, 기본 1)')
     ap.add_argument('--step', type=float, default=2.0, help='몇 초 간격으로 뽑을지')
     ap.add_argument('--start', type=float, default=0.0)
     ap.add_argument('--end', type=float, default=0.0, help='0 이면 영상 끝까지')
@@ -33,7 +37,9 @@ def main():
     args = ap.parse_args()
 
     cfg = load_cfg(args.config)
-    fields = cfg['players'][0]['fields']                
+    if args.player < 1 or args.player > len(cfg['players']):
+        raise SystemExit(f'--player 는 1~{len(cfg["players"])} 사이여야 합니다')
+    fields = cfg['players'][args.player - 1]['fields']
     x0 = min(f['x'] for f in fields)
     y0 = min(f['y'] for f in fields)
     x1 = max(f['x'] + f['w'] for f in fields)
@@ -88,7 +94,7 @@ def main():
         if args.scale != 1.0:
             crop = cv2.resize(crop, None, fx=args.scale, fy=args.scale,
                               interpolation=cv2.INTER_CUBIC)
-                        
+
         label_h = 26
         canvas = np.zeros((crop.shape[0] + label_h, crop.shape[1], 3), np.uint8)
         canvas[label_h:] = crop
