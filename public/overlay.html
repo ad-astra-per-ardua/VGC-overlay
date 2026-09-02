@@ -67,6 +67,7 @@ html, body {
   overflow: hidden;
 }
 
+/* 옅은 대각 질감 — 순검정의 밋밋함을 덜어줍니다 */
 #stage::before {
   content: '';
   position: absolute; inset: 0;
@@ -81,6 +82,7 @@ html, body {
   z-index: 0;
 }
 
+/* 상·하단 골드 헤어라인 */
 #stage::after {
   content: '';
   position: absolute; inset: 0;
@@ -100,6 +102,7 @@ html, body {
   z-index: 0;
 }
 
+/* 매화 꽃잎 — 배경에 은은하게 휘날림 */
 .petals {
   position: absolute; inset: 0;
   pointer-events: none;
@@ -299,7 +302,7 @@ html, body {
 .pick .str-tag {
   display: none;
   position: absolute; top: 10px; right: 10px;
-  height: 26px; padding: 0 10px;
+  height: 52px; padding: 0 20px;
   align-items: center;
   border-radius: 3px;
   background: #2A0D0A;
@@ -311,6 +314,8 @@ html, body {
 }
 .pick.str-picked .str-tag { display: inline-flex; }
 
+.pick.banned { overflow: visible; z-index: 3; contain: none; }
+
 .pick.banned .jacket,
 .pick.banned .meta { filter: grayscale(.6) brightness(.72); }
 
@@ -319,35 +324,188 @@ html, body {
   display: grid; place-items: center;
   pointer-events: none; z-index: 5;
   overflow: hidden;
+  border-radius: 6px;
 }
 
+/* 파편·꽃잎은 카드 밖으로 튀어야 해서 별도 레이어 */
+.ban-burst {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 9;
+  overflow: visible;
+}
+
+/* 칼날 궤적 — 사선으로 베고 지나감 */
 .ban-mark .cut-line {
-  position: absolute; left: 0; right: 0; top: 50%;
-  height: 3px;
-  transform: translateY(-50%) scaleX(0);
-  transform-origin: left center;
-  background: linear-gradient(90deg, var(--red) 0%, var(--red) 92%, #fff 100%);
-  box-shadow: 0 0 14px 1px rgba(217, 58, 43, .55);
-  animation: cut-sweep .22s cubic-bezier(.7, 0, .2, 1) forwards;
+  position: absolute; left: -8%; right: -8%; top: 50%;
+  height: 4px;
+  transform: translateY(-50%) rotate(-13deg);
+  transform-origin: center center;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--red) 8%,
+    #FF8A72 46%,
+    #FFFFFF 62%,
+    #FFE9C9 74%,
+    var(--red) 88%,
+    transparent 100%);
+  box-shadow:
+    0 0 18px 2px rgba(217, 58, 43, .75),
+    0 0 42px 6px rgba(217, 58, 43, .35);
+  animation: cut-sweep .19s cubic-bezier(.85, 0, .15, 1) forwards;
+  filter: blur(.2px);
+  z-index: 7;
 }
 @keyframes cut-sweep {
-  to { transform: translateY(-50%) scaleX(1); }
+  0%   { clip-path: inset(-30px 100% -30px -30px); opacity: 1; }
+  62%  { opacity: 1; }
+  100% { clip-path: inset(-30px -30px -30px -30px); opacity: 0; }
 }
 
+/* 베인 흉터 — 카드에 그대로 남음 */
+.ban-mark .scar {
+  position: absolute; left: -8%; right: -8%; top: 50%;
+  height: 3px;
+  transform: translateY(-50%) rotate(-13deg);
+  transform-origin: center center;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(217,58,43,.95) 10%,
+    rgba(255,138,114,1) 50%,
+    rgba(217,58,43,.95) 90%,
+    transparent 100%);
+  box-shadow:
+    0 0 10px rgba(217,58,43,.7),
+    0 1px 0 rgba(0,0,0,.85),
+    0 -1px 0 rgba(0,0,0,.85);
+  animation: scar-appear .26s cubic-bezier(.85, 0, .15, 1) .06s forwards;
+  z-index: 6;
+}
+@keyframes scar-appear {
+  0%   { clip-path: inset(-30px 100% -30px -30px); opacity: 0; }
+  35%  { opacity: 1; }
+  100% { clip-path: inset(-30px -30px -30px -30px); opacity: 1; }
+}
+
+/* 갈라진 틈 — 흉터 아래로 어둡게 벌어진 느낌 */
+.ban-mark .rift {
+  position: absolute; left: -8%; right: -8%; top: 50%;
+  height: 16px;
+  transform: translateY(-50%) rotate(-13deg);
+  transform-origin: center center;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(0,0,0,.75) 38%,
+    rgba(0,0,0,.9) 50%,
+    rgba(0,0,0,.75) 62%,
+    transparent 100%);
+  animation: scar-appear .3s cubic-bezier(.85, 0, .15, 1) .07s forwards;
+  z-index: 5;
+}
+
+/* 잘린 위·아래 조각이 서로 어긋남 */
+.pick.banned .jacket {
+  animation: slash-shift .55s cubic-bezier(.2, .9, .3, 1) .16s both;
+}
+@keyframes slash-shift {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(6px, -5px); }
+  52%  { transform: translate(-3px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+.pick.banned .meta {
+  animation: slash-shift-alt .55s cubic-bezier(.2, .9, .3, 1) .16s both;
+}
+@keyframes slash-shift-alt {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(-5px, 5px); }
+  52%  { transform: translate(2px, -2px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* 베는 순간 섬광 */
+.ban-mark .flash {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 40% at 50% 50%, rgba(255,240,220,.85), rgba(217,58,43,.25) 45%, transparent 72%);
+  opacity: 0;
+  animation: ban-flash .34s ease-out .1s forwards;
+  mix-blend-mode: screen;
+}
+@keyframes ban-flash {
+  0%   { opacity: 0; transform: scale(.7); }
+  18%  { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 0; transform: scale(1.18); }
+}
+
+/* 파편 */
+.ban-burst .shard {
+  position: absolute; left: 50%; top: 50%;
+  width: 9px; height: 3px;
+  background: linear-gradient(90deg, #FFE9C9, var(--red));
+  box-shadow: 0 0 7px rgba(217,58,43,.8);
+  opacity: 0;
+  animation: shard-fly .68s cubic-bezier(.15, .75, .35, 1) .14s forwards;
+}
+@keyframes shard-fly {
+  0%   { opacity: 0;  transform: translate(-50%, -50%) rotate(var(--sr, 0deg)) translateX(0) scale(1); }
+  12%  { opacity: 1; }
+  100% { opacity: 0;  transform: translate(-50%, -50%) rotate(var(--sr, 0deg)) translateX(var(--sd, 120px)) scale(.35); }
+}
+.ban-burst .shard:nth-of-type(1) { --sr: -24deg;  --sd: 92px; animation-delay: .14s; }
+.ban-burst .shard:nth-of-type(2) { --sr: 158deg;  --sd: 84px; animation-delay: .15s; height: 2px; width: 13px; }
+.ban-burst .shard:nth-of-type(3) { --sr: -52deg;  --sd: 68px; animation-delay: .17s; width: 7px; }
+.ban-burst .shard:nth-of-type(4) { --sr: 132deg;  --sd: 62px; animation-delay: .16s; }
+.ban-burst .shard:nth-of-type(5) { --sr: -8deg;   --sd: 104px; animation-delay: .19s; height: 2px; }
+.ban-burst .shard:nth-of-type(6) { --sr: 178deg;  --sd: 74px; animation-delay: .18s; width: 11px; }
+.ban-burst .shard:nth-of-type(7) { --sr: -38deg;  --sd: 58px;  animation-delay: .21s; width: 6px; height: 2px; }
+.ban-burst .shard:nth-of-type(8) { --sr: 146deg;  --sd: 96px;  animation-delay: .2s;  width: 8px; }
+
+/* 흩날리는 매화 꽃잎 */
+.ban-burst .ban-petal {
+  position: absolute; left: 50%; top: 50%;
+  width: 13px; height: 12px;
+  background: radial-gradient(circle at 32% 30%, #F7C6D2 0%, #E38FA4 44%, #C4677E 100%);
+  border-radius: 62% 38% 58% 42% / 58% 62% 38% 42%;
+  box-shadow: 0 0 8px rgba(227,143,164,.6);
+  opacity: 0;
+  animation: ban-petal-burst 1.05s cubic-bezier(.12, .7, .3, 1) .18s forwards;
+}
+@keyframes ban-petal-burst {
+  0%   { opacity: 0; transform: translate(-50%, -50%) rotate(var(--pr, 0deg)) translateX(0) rotate(0deg) scale(.5); }
+  14%  { opacity: 1; }
+  70%  { opacity: .9; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--pr, 0deg)) translateX(var(--pd, 130px)) rotate(560deg) scale(1); }
+}
+.ban-burst .ban-petal:nth-of-type(1) { --pr: -34deg; --pd: 96px; animation-delay: .18s; }
+.ban-burst .ban-petal:nth-of-type(2) { --pr: 168deg; --pd: 88px; animation-delay: .22s; width: 10px; height: 9px; }
+.ban-burst .ban-petal:nth-of-type(3) { --pr: -66deg; --pd: 74px; animation-delay: .2s; }
+.ban-burst .ban-petal:nth-of-type(4) { --pr: 124deg; --pd: 102px; animation-delay: .25s; width: 15px; height: 14px; }
+.ban-burst .ban-petal:nth-of-type(5) { --pr: 14deg;  --pd: 82px; animation-delay: .23s; width: 11px; height: 10px; }
+.ban-burst .ban-petal:nth-of-type(6) { --pr: -152deg;--pd: 90px; animation-delay: .27s; }
+
 .ban-mark .word {
-  position: relative; z-index: 6;
+  position: relative; z-index: 8;
   display: inline-flex; align-items: center;
   padding: 6px 22px;
   background: #0A0806;
   border: 2px solid var(--red);
   color: var(--red);
   font-family: var(--font-display);
-  font-size: 46px; font-weight: 700; letter-spacing: .12em;
-  opacity: 0; transform: scale(.85);
-  animation: ban-word .22s cubic-bezier(.2, 1.1, .4, 1) .22s forwards;
+  font-size: 42px; font-weight: 700; letter-spacing: .12em;
+  opacity: 0; transform: scale(1.6);
+  box-shadow: 0 0 26px rgba(217, 58, 43, .55), 0 6px 18px rgba(0,0,0,.7);
+  animation: ban-word .3s cubic-bezier(.15, 1.3, .35, 1) .2s forwards;
 }
 @keyframes ban-word {
-  to { opacity: 1; transform: scale(1); }
+  0%   { opacity: 0; transform: scale(1.6); }
+  55%  { opacity: 1; transform: scale(.94); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ban-burst .shard, .ban-burst .ban-petal, .ban-mark .flash,
+  .ban-mark .cut-line { display: none; }
+  .pick.banned .jacket, .pick.banned .meta { animation: none; }
+  .ban-mark .scar, .ban-mark .rift { animation: none; clip-path: none; opacity: 1; }
 }
 
 .pick.str-target {
@@ -441,7 +599,7 @@ html, body {
   font-size: 22px; letter-spacing: .1em; color: var(--gold-dim);
 }
 
-.str-cards { display: flex; gap: 34px; }
+.str-cards { display: flex; gap: 136px; }
 .str-card {
   width: 380px; height: 440px;
   background: var(--card);
@@ -811,12 +969,14 @@ html, body {
     <span class="petal"></span>
   </div>
 
+  <!-- STRATEGY 후보 3장 패널 (선곡 뷰 위에 겹쳐 뜸) -->
   <div id="str-panel">
     <div class="str-head">STRATEGY<small id="str-sub"></small></div>
     <div class="str-cards" id="str-cards"></div>
     <div class="str-note" id="str-note"></div>
   </div>
 
+  <!-- 선곡 / 밴 공용 뷰 -->
   <section class="view" data-view="songs">
     <header class="topbar">
       <div class="side left">
@@ -949,10 +1109,25 @@ function updatePick(li, song, i, animate) {
   if (wantMark && !mark) {
     const el = document.createElement('div');
     el.className = 'ban-mark';
-    el.innerHTML = '<div class="cut-line"></div><div class="word">BANNED</div>';
+    el.innerHTML =
+      '<div class="flash"></div>' +
+      '<div class="rift"></div>' +
+      '<div class="scar"></div>' +
+      '<div class="cut-line"></div>' +
+      '<div class="word">BANNED</div>';
+    const burst = document.createElement('div');
+    burst.className = 'ban-burst';
+    burst.innerHTML =
+      '<i class="shard"></i><i class="shard"></i><i class="shard"></i><i class="shard"></i>' +
+      '<i class="shard"></i><i class="shard"></i><i class="shard"></i><i class="shard"></i>' +
+      '<b class="ban-petal"></b><b class="ban-petal"></b><b class="ban-petal"></b>' +
+      '<b class="ban-petal"></b><b class="ban-petal"></b><b class="ban-petal"></b>';
     li.appendChild(el);
+    li.appendChild(burst);
   } else if (!wantMark && mark) {
     mark.remove();
+    const b = li.querySelector('.ban-burst');
+    if (b) b.remove();
   }
 
   if (animate) {
@@ -1006,7 +1181,7 @@ function renderStrategy() {
   panel.classList.add('on');
   const target = asArray(state.songs && state.songs[act.side])[act.index] || {};
   document.getElementById('str-sub').textContent =
-    target.title ? `대체 대상 — ${target.title}` : '';
+    target.title ? `STRATEGY 대상 곡 — ${target.title}` : '';
 
   const wrap = document.getElementById('str-cards');
   const pool = asArray(st.pool);
@@ -1045,7 +1220,7 @@ function renderStrategy() {
       else if (i === act.choice) c.classList.add('picked');
       else c.classList.add('dropped');
     });
-    note.textContent = act.choice === 'reset' ? '원곡 유지' : '선곡 대체';
+    note.textContent = act.choice === 'reset' ? '원곡 유지' : 'STRATEGY가 사용되었습니다';
     note.className = 'str-note on';
   }
 }
