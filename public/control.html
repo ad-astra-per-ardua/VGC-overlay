@@ -174,12 +174,8 @@
 
 <section>
   <h2>경기 중 — 영상</h2>
-  <div class="row" style="margin-bottom:12px">
-    <button class="sm" id="mode-split">모드: 선수별 파일 4개</button>
-    <button class="sm" id="mode-combined">모드: 통합 영상 1개</button>
-  </div>
 
-  <div id="combined-box" style="display:none">
+  <div id="combined-box">
     <div class="field">
       <label>통합 영상 경로</label>
       <input id="combined-video" placeholder="/videos/all4.mp4">
@@ -460,7 +456,6 @@ const pushSongs = debounce((side) => patch({ songs: { [side]: state.songs[side] 
 function renderSlots() {
   const wrap = $('slots');
   wrap.innerHTML = '';
-  const combined = !!(state.match.combinedVideo);
   const hud = $('hud-box');
   if (hud) {
     hud.style.display = state.match.hudCrop ? '' : 'none';
@@ -510,59 +505,36 @@ function renderSlots() {
     const mini = document.createElement('div');
     mini.className = 'mini';
 
-    if (combined) {
-      mini.style.gridTemplateColumns = '52px 52px 52px 52px 1fr 1fr';
-      const crop = slot.crop || { x: 0, y: 0, w: 50, h: 50 };
-      const mk = (key, ph) => {
-        const inp = document.createElement('input');
-        inp.type = 'number'; inp.step = '0.5'; inp.min = '0'; inp.max = '100';
-        inp.value = crop[key]; inp.title = ph; inp.style.width = '52px';
-        inp.oninput = () => {
-          const c = state.match.slots[i].crop || { x: 0, y: 0, w: 50, h: 50 };
-          c[key] = Number(inp.value) || 0;
-          state.match.slots[i].crop = c;
-          pushSlots();
-        };
-        return inp;
+    mini.style.gridTemplateColumns = '52px 52px 52px 52px 1fr 1fr';
+    const crop = slot.crop || { x: 0, y: 0, w: 50, h: 50 };
+    const mk = (key, ph) => {
+      const inp = document.createElement('input');
+      inp.type = 'number'; inp.step = '0.5'; inp.min = '0'; inp.max = '100';
+      inp.value = crop[key]; inp.title = ph; inp.style.width = '52px';
+      inp.oninput = () => {
+        const c = state.match.slots[i].crop || { x: 0, y: 0, w: 50, h: 50 };
+        c[key] = Number(inp.value) || 0;
+        state.match.slots[i].crop = c;
+        pushSlots();
       };
-      const x = mk('x', 'x%'), y = mk('y', 'y%'), w = mk('w', 'w%'), h = mk('h', 'h%');
+      return inp;
+    };
+    const x = mk('x', 'x%'), y = mk('y', 'y%'), w = mk('w', 'w%'), h = mk('h', 'h%');
 
-      const icon = document.createElement('input');
-      icon.value = slot.icon || ''; icon.placeholder = '/assets/icon1.png';
-      icon.oninput = () => { state.match.slots[i].icon = icon.value; pushSlots(); };
+    const icon = document.createElement('input');
+    icon.value = slot.icon || ''; icon.placeholder = '/assets/icon1.png';
+    icon.oninput = () => { state.match.slots[i].icon = icon.value; pushSlots(); };
 
-      const timeline = document.createElement('input');
-      timeline.value = slot.timeline || ''; timeline.placeholder = '/videos/p1.scores.json';
-      timeline.oninput = () => { state.match.slots[i].timeline = timeline.value; pushSlots(); };
+    const timeline = document.createElement('input');
+    timeline.value = slot.timeline || ''; timeline.placeholder = '/videos/p1.scores.json';
+    timeline.oninput = () => { state.match.slots[i].timeline = timeline.value; pushSlots(); };
 
-      mini.append(x, y, w, h, icon, timeline);
-      const hint = document.createElement('div');
-      hint.className = 'muted';
-      hint.style.cssText = 'grid-column:1/-1; font-size:11px; margin-top:2px';
-      hint.textContent = 'x, y, w, h — 통합 영상 원본 대비 % 좌표';
-      mini.appendChild(hint);
-    } else {
-      mini.style.gridTemplateColumns = '1fr 100px 1fr 1fr';
-      const video = document.createElement('input');
-      video.value = slot.video || ''; video.placeholder = '/videos/p1.mp4';
-      video.oninput = () => { state.match.slots[i].video = video.value; pushSlots(); };
-
-      const offset = document.createElement('input');
-      offset.type = 'number'; offset.step = '10';
-      offset.value = slot.offsetMs || 0;
-      offset.title = '싱크 보정 (ms). 양수면 그 선수 영상을 뒤로 당김';
-      offset.oninput = () => { state.match.slots[i].offsetMs = Number(offset.value) || 0; pushSlots(); };
-
-      const icon = document.createElement('input');
-      icon.value = slot.icon || ''; icon.placeholder = '/assets/icon1.png';
-      icon.oninput = () => { state.match.slots[i].icon = icon.value; pushSlots(); };
-
-      const timeline = document.createElement('input');
-      timeline.value = slot.timeline || ''; timeline.placeholder = '/videos/p1.scores.json';
-      timeline.oninput = () => { state.match.slots[i].timeline = timeline.value; pushSlots(); };
-
-      mini.append(video, offset, icon, timeline);
-    }
+    mini.append(x, y, w, h, icon, timeline);
+    const hint = document.createElement('div');
+    hint.className = 'muted';
+    hint.style.cssText = 'grid-column:1/-1; font-size:11px; margin-top:2px';
+    hint.textContent = 'x, y, w, h — 통합 영상 원본 대비 % 좌표';
+    mini.appendChild(hint);
 
     box.append(head, mini);
     wrap.appendChild(box);
@@ -594,10 +566,6 @@ function render() {
   renderStrPool();
   renderStrategyUI();
   renderBadgeUI();
-  const combined = !!(state.match.combinedVideo);
-  $('mode-split').classList.toggle('on', !combined);
-  $('mode-combined').classList.toggle('on', combined);
-  $('combined-box').style.display = combined ? '' : 'none';
   $('combined-video').value = state.match.combinedVideo || '';
   $('meter').value = state.match.meter || 0;
   $('meter-val').textContent = Number(state.match.meter || 0).toFixed(2);
@@ -1087,13 +1055,6 @@ document.querySelectorAll('[data-add]').forEach((b) => {
   };
 });
 
-$('mode-split').onclick = () => {
-  const patch1 = { match: { combinedVideo: '' } };
-  patch(patch1);
-};
-$('mode-combined').onclick = () => {
-  patch({ match: { combinedVideo: state.match.combinedVideo || '/videos/all4.mp4' } });
-};
 $('combined-video').oninput = debounce(() => patch({ match: { combinedVideo: $('combined-video').value } }), 250);
 
 ['x', 'y', 'w', 'h'].forEach((k) => {

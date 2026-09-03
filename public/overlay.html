@@ -116,7 +116,7 @@ html, body {
   background: radial-gradient(circle at 32% 30%, #F3B7C4 0%, #E38FA4 42%, #C4677E 100%);
   border-radius: 62% 38% 58% 42% / 58% 62% 38% 42%;
   opacity: 0;
-  filter: drop-shadow(0 0 4px rgba(227, 143, 164, .35));
+  box-shadow: 0 0 5px rgba(227, 143, 164, .32);
   animation: petal-fall linear infinite;
   will-change: transform, opacity;
 }
@@ -1300,6 +1300,7 @@ function renderStrategy() {
         c.style.animationDelay = '0s';
         c.classList.add('revealed');
       }
+    });
 
     [...wrap.children].forEach((c, i) => {
       c.classList.remove('picked', 'dropped');
@@ -1872,7 +1873,7 @@ function handleCmd(cmd) {
       allVideos().forEach((v) => v.play().catch(() => {}));
       break;
     case 'replayBan':
-      document.querySelectorAll('.ban-mark').forEach((el) => el.remove());
+      document.querySelectorAll('.ban-mark, .ban-burst').forEach((el) => el.remove());
       pickCache.left = pickCache.right = '';
       renderPicks(false);
       break;
