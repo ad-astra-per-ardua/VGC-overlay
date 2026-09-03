@@ -1,0 +1,220 @@
+{
+  "teams": {
+    "left": {
+      "name": "이마트빵도둑볼은우",
+      "logo": "https://i.imgur.com/pap50yH.jpeg",
+      "score": 0,
+      "players": [
+        {
+          "name": "장박짱",
+          "icon": ""
+        },
+        {
+          "name": "소구리마",
+          "icon": ""
+        }
+      ]
+    },
+    "right": {
+      "name": "비순애사랑단",
+      "logo": "https://i.imgur.com/aL9xhIQ.png",
+      "score": 0,
+      "players": [
+        {
+          "name": "MindBlow",
+          "icon": ""
+        },
+        {
+          "name": "쿠크시",
+          "icon": ""
+        }
+      ]
+    }
+  },
+  "songs": {
+    "left": [
+      {
+        "title": "continew",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F649_exhaust.webp",
+        "diff": "EXH",
+        "level": "17.5",
+        "banned": false
+      },
+      {
+        "title": "TIEFSEE",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F629_exhaust.webp",
+        "diff": "EXH",
+        "level": "17.5",
+        "banned": false
+      },
+      {
+        "title": "DIABLOSIS::Nāga",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F914_exhaust.webp",
+        "diff": "EXH",
+        "level": "17.5",
+        "banned": false
+      }
+    ],
+    "right": [
+      {
+        "title": "good high school",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F7_infinite.webp",
+        "diff": "INF",
+        "level": "17.5",
+        "banned": false
+      },
+      {
+        "title": "Verse IV",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F376_exhaust.webp",
+        "diff": "EXH",
+        "level": "17.5",
+        "banned": false
+      },
+      {
+        "title": "Inixia",
+        "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F829_gravity.webp",
+        "diff": "GRV",
+        "level": "17.5",
+        "banned": false
+      }
+    ]
+  },
+  "round": {
+    "kicker": "ARENA BATTLE",
+    "title": "ROUND 1",
+    "sub": "LEGACY"
+  },
+  "strategy": {
+    "active": null,
+    "pool": [
+      {
+        "title": "1",
+        "jacket": "",
+        "diff": "EXH",
+        "level": ""
+      },
+      {
+        "title": "2",
+        "jacket": "",
+        "diff": "EXH",
+        "level": ""
+      },
+      {
+        "title": "3",
+        "jacket": "",
+        "diff": "EXH",
+        "level": ""
+      }
+    ],
+    "used": true,
+    "replacedSide": "left",
+    "replacedIndex": 1,
+    "pools": {
+      "left": [
+        {
+          "title": "二分間の世界",
+          "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1788_maximum.webp",
+          "diff": "MXM",
+          "level": "18.4"
+        },
+        {
+          "title": "Revvable Engine",
+          "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1743_maximum.webp",
+          "diff": "MXM",
+          "level": "18.3"
+        },
+        {
+          "title": "神罰",
+          "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fanzuinfo.s3.ap-northeast-2.amazonaws.com%2F1784_maximum.webp",
+          "diff": "MXM",
+          "level": "18.8"
+        }
+      ],
+      "right": [
+        {
+          "title": "Grαnd Arχitect",
+          "jacket": "https://v0-vgc-ochre.vercel.app/api/image-proxy?url=https%3A%2F%2Fsdvxindex.com%2F%2Fimg%2F2259_grandarxitect_chubay%2Fjk_2259_1_b.webp",
+          "diff": "MXM",
+          "level": "18.8"
+        },
+        {
+          "title": "Everything B.K.",
+          "jacket": "https://sdvx-gallery.vsfe.me/static/img/2212/2212_1_b.webp?v=2",
+          "diff": "MXM",
+          "level": "18.6"
+        },
+        {
+          "title": "レインボウ・フレーバー",
+          "jacket": "https://sdvx-gallery.vsfe.me/static/img/2080/2080_5_b.webp?v=2",
+          "diff": "MXM",
+          "level": "18.3"
+        }
+      ]
+    }
+  },
+  "match": {
+    "slots": [
+      {
+        "rank": "3rd",
+        "team": "left",
+        "player": "장발짱",
+        "icon": "https://vgc2026.s3.ap-northeast-2.amazonaws.com/rookie/%EC%9E%A5%EB%B0%9C%EC%A7%B1.jpg",
+        "video": "",
+        "offsetMs": 0,
+        "timeline": "/r1/match1.p1.scores.json",
+        "crop": {
+          "x": 0,
+          "y": 0,
+          "w": 25,
+          "h": 100
+        },
+        "altActive": true
+      },
+      {
+        "rank": "1st",
+        "team": "left",
+        "player": "오구리마",
+        "icon": "https://vgc2026.s3.ap-northeast-2.amazonaws.com/rookie/%EC%98%A4%EA%B5%AC%EB%A6%AC%EB%A7%88.png",
+        "video": "",
+        "offsetMs": 0,
+        "timeline": "/r1/match1.p2.scores.json",
+        "crop": {
+          "x": 25,
+          "y": 0,
+          "w": 25,
+          "h": 100
+        }
+      },
+      {
+        "rank": "",
+        "team": "right",
+        "player": "Hakase",
+        "crop": {
+          "x": 50,
+          "y": 0,
+          "w": 25,
+          "h": 100
+        },
+        "timeline": "/r1/match1.p3.scores.json",
+        "icon": "https://vgc2026.s3.ap-northeast-2.amazonaws.com/rookie/Hakase.webp"
+      },
+      {
+        "rank": "",
+        "team": "right",
+        "player": "R_s_Xi_L",
+        "crop": {
+          "x": 75,
+          "y": 0,
+          "w": 25,
+          "h": 100
+        },
+        "timeline": "/r1/match1.p4.scores.json",
+        "icon": "https://vgc2026.s3.ap-northeast-2.amazonaws.com/rookie/R_s_Xi_L.png"
+      }
+    ],
+    "combinedVideo": "/videos/match_1set.mp4",
+    "hudCrop": null,
+    "maxDiff": 150000,
+    "labelStyle": "short"
+  }
+}
