@@ -1,9 +1,9 @@
 {
-  "view": "match",
+  "view": "songs",
   "round": {
-    "kicker": "ARENA BATTLE",
-    "title": "ROUND 3",
-    "sub": "VALKYRIE"
+    "kicker": "SINGLE BATTLE",
+    "title": "ROUND 4",
+    "sub": "FREE"
   },
   "teams": {
     "left": {
@@ -40,130 +40,88 @@
   "songs": {
     "left": [
       {
-        "title": " V!LLA!N",
-        "jacket": "https://sdvx-gallery.vsfe.me/static/img/2135/2135_1_b.webp?v=2",
+        "title": "Glitch N Ride",
+        "jacket": "https://sdvx-gallery.vsfe.me/static/img/2361/2361_m.webp?v=2",
         "diff": "MXM",
-        "level": "18.3",
-        "banned": false
+        "level": "19.2",
+        "banned": true
       },
       {
-        "title": " Dynasty -dal segno-",
-        "jacket": "https://sdvx-gallery.vsfe.me/static/img/2023/2023_5_b.webp?v=2",
+        "title": "ULTRACHARGE",
+        "jacket": "https://sdvx-gallery.vsfe.me/static/img/2397/2397_m.webp?v=2",
         "diff": "MXM",
-        "level": "18.2",
-        "banned": false
-      },
-      {
-        "title": "藍の華",
-        "jacket": "https://sdvx-gallery.vsfe.me/static/img/1741/1741_1_b.webp?v=2",
-        "diff": "MXM",
-        "level": "18.2",
+        "level": "19.6",
         "banned": false
       }
     ],
     "right": [
       {
-        "title": "アンチグラビティ・ガール",
-        "jacket": "https://sdvx-gallery.vsfe.me/static/img/2067/2067_1_b.webp?v=2",
+        "title": "D.I.X.",
+        "jacket": "https://sdvx-gallery.vsfe.me/static/img/1936/1936_5_b.webp?v=2",
         "diff": "MXM",
         "level": "18.7",
         "banned": false
       },
       {
-        "title": "NEMSYS ARENA World Hexathlon",
-        "jacket": "https://sdvx-gallery.vsfe.me/static/img/2152/2152_5_b.webp?v=2",
-        "diff": "EXH",
-        "level": "18.7",
-        "banned": false
-      },
-      {
-        "title": "ØƵ",
-        "jacket": "https://sdvx-gallery.vsfe.me/static/img/1800/1800_1_b.webp?v=2",
+        "title": "Gate of Atlantis",
+        "jacket": "https://sdvx-gallery.vsfe.me/static/img/1215/1215_5_b.webp?v=2",
         "diff": "MXM",
-        "level": "18.6",
+        "level": "18.7",
         "banned": false
       }
     ]
   },
   "match": {
-    "label": "+88,990",
-    "meter": 0.46,
+    "label": "",
+    "meter": 0.17,
     "meterVisible": true,
     "autoMeter": true,
     "autoRank": true,
-    "combinedVideo": "/videos/match_3set.mp4",
+    "combinedVideo": "/videos/match_4set_new.mp4",
     "maxDiff": 150000,
     "labelStyle": "short",
     "hudCrop": null,
     "badges": {
       "mode": "manual",
-      "left": "",
-      "right": "STRATEGY",
-      "leftPicker": "11",
-      "rightPicker": ""
+      "left": "STRATEGY",
+      "right": ""
     },
     "currentSide": "",
     "currentSong": 0,
+    "songResetAt": null,
     "slots": [
       {
         "rank": "3rd",
-        "team": "left",
-        "player": "장발짱",
-        "icon": "https://vgc2026.s3.ap-northeast-2.amazonaws.com/rookie/%EC%9E%A5%EB%B0%9C%EC%A7%B1.jpg",
-        "video": "",
-        "offsetMs": 0,
-        "timeline": "/r3/match3.p1.scores.json",
-        "crop": {
-          "x": 0,
-          "y": 0,
-          "w": 25,
-          "h": 100
-        },
-        "altActive": true
-      },
-      {
-        "rank": "1st",
         "team": "left",
         "player": "이_마_트",
         "icon": "https://vgc2026.s3.ap-northeast-2.amazonaws.com/rookie/%EC%9D%B4_%EB%A7%88_%ED%8A%B8.png",
         "video": "",
         "offsetMs": 0,
-        "timeline": "/r3/match3.p2.scores.json",
+        "timeline": "/r4/match4.p1.scores.json",
         "crop": {
-          "x": 25,
-          "y": 0,
-          "w": 25,
-          "h": 100
-        }
-      },
-      {
-        "rank": "",
-        "team": "right",
-        "player": "Hakase",
-        "crop": {
-          "x": 50,
-          "y": 0,
-          "w": 25,
-          "h": 100
+          "x": 4.167,
+          "y": 14.242,
+          "w": 41.667,
+          "h": 84.242
         },
-        "timeline": "/r3/match3.p3.scores.json",
-        "icon": "https://vgc2026.s3.ap-northeast-2.amazonaws.com/rookie/Hakase.webp"
+        "altActive": true
       },
       {
-        "rank": "",
+        "rank": "1st",
         "team": "right",
         "player": "메가치렁",
+        "icon": "https://vgc2026.s3.ap-northeast-2.amazonaws.com/rookie/%EB%A9%94%EA%B0%80%EC%B9%98%EB%A0%81.png",
+        "video": "",
+        "offsetMs": 0,
+        "timeline": "/r4/match4.p2.scores.json",
         "crop": {
-          "x": 75,
-          "y": 0,
-          "w": 25,
-          "h": 100
-        },
-        "timeline": "/r3/match3.p4.scores.json",
-        "icon": "https://vgc2026.s3.ap-northeast-2.amazonaws.com/rookie/%EB%A9%94%EA%B0%80%EC%B9%98%EB%A0%81.png"
+          "x": 54.167,
+          "y": 14.242,
+          "w": 41.667,
+          "h": 84.242
+        }
       }
-    ],
-    "songResetAt": 179.585652
+    ]
   },
   "strategy": {
     "active": null,
