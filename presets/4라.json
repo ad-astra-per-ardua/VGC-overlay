@@ -149,10 +149,10 @@
         "offsetMs": 0,
         "timeline": "/r4/match4.p1.scores.json",
         "crop": {
-          "x": 0,
-          "y": 0,
-          "w": 50,
-          "h": 100
+          "x": 4.167,
+          "y": 14.242,
+          "w": 41.667,
+          "h": 84.242
         },
         "altActive": true
       },
@@ -165,14 +165,14 @@
         "offsetMs": 0,
         "timeline": "/r4/match4.p2.scores.json",
         "crop": {
-          "x": 50,
-          "y": 0,
-          "w": 50,
-          "h": 100
+          "x": 54.167,
+          "y": 14.242,
+          "w": 41.667,
+          "h": 84.242
         }
       }
     ],
-    "combinedVideo": "/videos/match_4set.mp4",
+    "combinedVideo": "/videos/match_4set_new.mp4",
     "hudCrop": null,
     "maxDiff": 150000,
     "labelStyle": "short"

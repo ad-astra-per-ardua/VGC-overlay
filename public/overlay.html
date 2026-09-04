@@ -1499,6 +1499,10 @@
       combinedVideo.playsInline = true;
       combinedVideo.preload = 'auto';
       combinedVideo.style.cssText = 'position:fixed; left:-9999px; top:-9999px; width:1px; height:1px;';
+      // 일시정지 상태로 탐색하면 currentTime 은 바뀌지 않으므로 캔버스가 검은 채로 남는다.
+      // 프레임이 실제로 준비된 시점에 다시 그리도록 캐시를 무효화한다.
+      combinedVideo.addEventListener('seeked', () => { lastDrawnTime = -1; });
+      combinedVideo.addEventListener('loadeddata', () => { lastDrawnTime = -1; });
       document.body.appendChild(combinedVideo);
     }
     if (combinedSrc !== src) {
@@ -1941,7 +1945,6 @@
         break;
     }
   }
-/ㅣ
   function connect() {
     const es = new EventSource('/api/events');
     es.addEventListener('state', (e) => { state = JSON.parse(e.data); render(); });

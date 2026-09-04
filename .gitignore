@@ -20,6 +20,7 @@ frame*.png
 src*.png
 chk*.png
 test_run*.json
+*.backup.json
 
 # 압축/임시
 *.zip
