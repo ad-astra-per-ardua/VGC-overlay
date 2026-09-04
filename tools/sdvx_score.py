@@ -246,7 +246,7 @@ def safe_workers(requested, width, height, hard_cap=None):
 
 
 def run_range(video, cfg, templates_per_player, start_frame, end_frame, stride, src_fps,
-              progress=None, hwaccel=False):
+              progress=None, hwaccel=False, threshold=MATCH_THRESHOLD):
     cap = open_video(video, hwaccel)
     if not cap.isOpened():
         raise SystemExit(f'영상을 열 수 없습니다: {video}')
@@ -266,7 +266,7 @@ def run_range(video, cfg, templates_per_player, start_frame, end_frame, stride, 
             except cv2.error:
                 ok, frame = False, None
             if ok and frame is not None:
-                values = recognize_frame(frame, players, templates_per_player, MATCH_THRESHOLD)
+                values = recognize_frame(frame, players, templates_per_player, threshold)
                 samples.append((idx / src_fps, values))
         idx += 1
         if progress and idx % (stride * 50) == 0:
@@ -276,10 +276,11 @@ def run_range(video, cfg, templates_per_player, start_frame, end_frame, stride, 
 
 
 def _worker(job):
-    video, cfg, template_dirs, start, end, stride, src_fps, hwaccel = job
+    video, cfg, template_dirs, start, end, stride, src_fps, hwaccel, threshold = job
     n_fields = len(cfg['players'][0]['fields'])
     templates_per_player = load_templates_per_player(template_dirs, n_fields)
-    return run_range(video, cfg, templates_per_player, start, end, stride, src_fps, hwaccel=hwaccel)
+    return run_range(video, cfg, templates_per_player, start, end, stride, src_fps,
+                     hwaccel=hwaccel, threshold=threshold)
 
 
 def parse_timestamp(s):
@@ -419,7 +420,8 @@ def cmd_run(args):
         s = start_frame
         while s < end_frame:
             e = min(end_frame, s + per)
-            jobs.append((args.video, cfg, template_dirs, s, e, stride, src_fps, args.hwaccel))
+            jobs.append((args.video, cfg, template_dirs, s, e, stride, src_fps, args.hwaccel,
+                         args.threshold))
             s = e
         print(f'{len(jobs)}개 구간을 {workers}개 프로세스로 병렬 처리', file=sys.stderr)
         with mp.Pool(workers) as pool:
@@ -435,7 +437,8 @@ def cmd_run(args):
                 print(f'\r{done}/{total}  ({done * 100 // total}%)', end='', file=sys.stderr)
 
         samples = run_range(args.video, cfg, templates_per_player, start_frame, end_frame or 1 << 62,
-                            stride, src_fps, progress, hwaccel=args.hwaccel)
+                            stride, src_fps, progress, hwaccel=args.hwaccel,
+                            threshold=args.threshold)
         print('', file=sys.stderr)
 
     breakpoints = load_breakpoints(args.breaks, args.breaks_file)
@@ -461,7 +464,7 @@ def cmd_run(args):
         per_player = [(t, vs[pi]) for t, vs in samples]
         weak = sum(1 for _, v in per_player if v is None)
         cleaned = postprocess(per_player, cfg['max_score'], breakpoints, freezes,
-                              fps=cfg['fps'], max_rate_per_sec=5_000_000)
+                              fps=cfg['fps'], max_rate_per_sec=args.max_rate)
         out_path = player_out_path(args.out, pi, multi)
         out_dir = os.path.dirname(os.path.abspath(out_path))
         if not os.path.isdir(out_dir):
@@ -685,6 +688,14 @@ def main():
                         '선수를 구간별로 따로 돌릴 때 씁니다. 기본은 영상 처음부터.')
     r.add_argument('--end', default='',
                    help='이 시각까지만 인식합니다(mm:ss 또는 초). 기본은 영상 끝까지.')
+    r.add_argument('--threshold', type=float, default=MATCH_THRESHOLD,
+                   help='이 값보다 신뢰도가 낮은 프레임은 인식 실패로 버립니다. '
+                        f'기본 {MATCH_THRESHOLD}. 낮추면 인식률이 오르지만 오인식도 통과할 수 있고, '
+                        '높이면 반대입니다.')
+    r.add_argument('--max-rate', type=float, default=5_000_000,
+                   help='초당 최대 점수 상승폭. 이보다 빠르게 오르면 오인식으로 보고 버립니다. '
+                        '기본 5000000. 한 자리 오인식(1만점 단위)이 통과한다면 '
+                        '300000~600000 정도로 낮춰보세요.')
     r.set_defaults(func=cmd_run)
 
     c = sub.add_parser('check', help='특정 시점의 인식 결과를 자릿수별로 확인')
@@ -705,9 +716,9 @@ def main():
     sc.add_argument('--config', required=True)
     sc.add_argument('--templates', default='templates')
     sc.add_argument('--player-templates', default='',
-                   help='run 과 동일. 선수 수와 같은 길이의 JSON 배열로 템플릿 폴더 경로 나열')
+                    help='run 과 동일. 선수 수와 같은 길이의 JSON 배열로 템플릿 폴더 경로 나열')
     sc.add_argument('--player-templates-file', default='',
-                   help='--player-templates 를 파일로 줄 때 (PowerShell 따옴표 문제 회피용)')
+                    help='--player-templates 를 파일로 줄 때 (PowerShell 따옴표 문제 회피용)')
     sc.add_argument('--start', type=float, default=0.0)
     sc.add_argument('--end', type=float, default=0.0, help='0 이면 영상 끝까지')
     sc.add_argument('--step', type=float, default=10.0)
