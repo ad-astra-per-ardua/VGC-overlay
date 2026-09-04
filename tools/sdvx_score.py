@@ -356,7 +356,7 @@ def resolve_template_dirs(templates_dir, player_templates_json, n_players, playe
         dirs = json.loads(text)
     except json.JSONDecodeError as e:
         raise SystemExit(f'--player-templates JSON 을 읽을 수 없습니다: {e}\n'
-                         f'  예: --player-templates \'["r4/templates_p1","r4/templates_p2"]\'')
+                         f'  예: --player-templates \'["<선수1 템플릿폴더>","<선수2 템플릿폴더>"]\'')
     if not isinstance(dirs, list) or len(dirs) != n_players:
         raise SystemExit(f'--player-templates 는 선수 수({n_players})와 같은 길이의 배열이어야 합니다 '
                          f'(지금 선수 수: {n_players})')
@@ -661,12 +661,12 @@ def main():
     r.add_argument('--player-templates', default='',
                    help='선수마다 폰트 크기/모양이 달라 템플릿을 따로 써야 할 때. 선수 수와 같은 '
                         '길이의 JSON 배열로 폴더 경로를 나열합니다. 예: '
-                        '--player-templates \'["r4/templates_p1","r4/templates_p2"]\'. '
+                        '--player-templates \'["<선수1 템플릿폴더>","<선수2 템플릿폴더>"]\'. '
                         '지정하면 --templates 는 무시됩니다.')
     r.add_argument('--player-templates-file', default='',
                    help='--player-templates 를 파일로 줄 때. 파일 내용은 위와 같은 JSON 배열. '
                         'PowerShell 따옴표 문제를 피하려면 이 방식을 권장합니다: '
-                        '\'["r4/templates_p1","r4/templates_p2"]\' | Out-File -Encoding utf8 r4\\pt.json')
+                        '\'["r4/templates_final","r4/templates_final"]\' | Out-File -Encoding utf8 r4\\pt.json')
     r.add_argument('--out', required=True)
     r.add_argument('--workers', type=int, default=0,
                    help='병렬 프로세스 수 (기본 0 = 자동. 해상도에 맞춰 메모리 한도 안에서 정합니다)')
